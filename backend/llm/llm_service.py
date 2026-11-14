@@ -10,6 +10,7 @@ from typing import Any
 
 from groq import (
     APIConnectionError,
+    APIStatusError,
     APITimeoutError,
     AuthenticationError,
     BadRequestError,
@@ -33,7 +34,17 @@ RETRYABLE_ERRORS = (
 
 
 class LLMError(RuntimeError):
-    """Raised when the LLM cannot produce a usable response."""
+    """Safe provider failure; vendor bodies and credentials are never exposed."""
+
+    def __init__(
+        self,
+        message: str,
+        code: str = "llm_unavailable",
+        status_code: int | None = None,
+    ):
+        super().__init__(message)
+        self.code = code
+        self.status_code = status_code
 
 
 class LLMService:
@@ -75,9 +86,14 @@ class LLMService:
                     "GROQ_API_KEY is not configured. Add it to .env to enable "
                     "the LLM service."
                 )
+            # Groq 1.7 resources include /openai/v1 in their request paths.
+            # Accept legacy OpenAI-style environment values without doubling that prefix.
+            sdk_base_url = self.base_url.rstrip("/")
+            if sdk_base_url.endswith("/openai/v1"):
+                sdk_base_url = sdk_base_url[: -len("/openai/v1")]
             self._client = Groq(
                 api_key=self.api_key,
-                base_url=self.base_url,
+                base_url=sdk_base_url,
                 timeout=self.timeout,
                 max_retries=0,
             )
@@ -88,11 +104,14 @@ class LLMService:
         messages: Sequence[Message],
         temperature: float | None = None,
         max_tokens: int | None = None,
+        deadline: float | None = None,
     ) -> str:
         payload = [dict(message) for message in messages]
-        last_error: Exception | None = None
 
         for attempt in range(1, self.max_retries + 1):
+            remaining = None if deadline is None else deadline - time.monotonic()
+            if remaining is not None and remaining <= 0:
+                raise LLMError("LLM deadline exceeded.")
             try:
                 response = self.client.chat.completions.create(
                     model=self.model,
@@ -101,15 +120,30 @@ class LLMService:
                         self.temperature if temperature is None else temperature
                     ),
                     max_tokens=max_tokens or self.max_tokens,
+                    **(
+                        {"reasoning_effort": "low", "include_reasoning": False}
+                        if self.model.startswith("openai/gpt-oss-")
+                        else {}
+                    ),
+                    **(
+                        {"timeout": min(self.timeout, remaining)}
+                        if remaining is not None
+                        else {}
+                    ),
                 )
             except AuthenticationError as exc:
                 raise LLMError(
-                    "Groq authentication failed. Check GROQ_API_KEY."
+                    "Groq authentication failed. Check GROQ_API_KEY.",
+                    code="llm_authentication",
+                    status_code=401,
                 ) from exc
             except BadRequestError as exc:
-                raise LLMError(f"Groq rejected the request: {exc}") from exc
+                raise LLMError(
+                    "Groq rejected the request.",
+                    code="llm_bad_request",
+                    status_code=400,
+                ) from exc
             except RETRYABLE_ERRORS as exc:
-                last_error = exc
                 if attempt >= self.max_retries:
                     break
                 delay = 2 ** (attempt - 1)
@@ -118,10 +152,29 @@ class LLMService:
                     attempt,
                     self.max_retries,
                     delay,
-                    exc,
+                    type(exc).__name__,
                 )
+                if deadline is not None and time.monotonic() + delay >= deadline:
+                    raise LLMError("LLM deadline exceeded.") from None
                 self._sleep(delay)
+            except APIStatusError as exc:
+                if exc.status_code == 404:
+                    raise LLMError(
+                        "Groq endpoint or model not found. Check GROQ_BASE_URL and LLM_MODEL.",
+                        code="llm_not_found",
+                        status_code=404,
+                    ) from exc
+                raise LLMError(
+                    "Groq API request was rejected.",
+                    code="llm_api_error",
+                    status_code=exc.status_code,
+                ) from exc
             else:
+                if getattr(response.choices[0], "finish_reason", None) == "length":
+                    raise LLMError(
+                        "Groq completion exceeded its token budget. Increase LLM_MAX_TOKENS.",
+                        code="llm_token_limit",
+                    )
                 content = response.choices[0].message.content
                 if not content or not content.strip():
                     raise LLMError("Groq returned an empty response.")
@@ -134,16 +187,16 @@ class LLMService:
                 )
                 return content.strip()
 
-        raise LLMError(
-            f"Groq request failed after {self.max_retries} attempts: {last_error}"
-        )
+        raise LLMError(f"Groq request failed after {self.max_retries} attempts.")
 
     def complete_json(
         self,
         messages: Sequence[Message],
         max_tokens: int | None = None,
+        deadline: float | None = None,
     ) -> dict[str, Any]:
-        raw = self.complete(messages, temperature=0.0, max_tokens=max_tokens)
+        budget = {"deadline": deadline} if deadline is not None else {}
+        raw = self.complete(messages, temperature=0.0, max_tokens=max_tokens, **budget)
         try:
             return parse_json_object(raw)
         except ValueError:
@@ -160,7 +213,9 @@ class LLMService:
                 ),
             },
         ]
-        raw_retry = self.complete(repair, temperature=0.0, max_tokens=max_tokens)
+        raw_retry = self.complete(
+            repair, temperature=0.0, max_tokens=max_tokens, **budget
+        )
         try:
             return parse_json_object(raw_retry)
         except ValueError as exc:

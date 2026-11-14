@@ -36,10 +36,11 @@ class Orchestrator:
     def build_default(cls) -> "Orchestrator":
         """Wire the real Groq client, Chroma retriever, and agent registry."""
         llm = LLMService()
+        retriever = Retriever()
         return cls(
             agents=[
-                PatientAgent(retriever=Retriever(), llm=llm),
-                ReportAgent(),
+                PatientAgent(retriever=retriever, llm=llm),
+                ReportAgent(retriever=retriever, llm=llm),
                 ClinicalAgent(),
             ],
             router=Router(llm=llm),
@@ -53,7 +54,15 @@ class Orchestrator:
         agent = self._select_agent(intent)
         result = agent.handle(request, intent, history)
 
-        self.store.add_turn(session_id, request.message, result.answer)
+        if intent is Intent.REPORT_EXPLANATION:
+            # Never retain pasted report text or medical identifiers in report chat turns.
+            self.store.add_turn(
+                session_id,
+                "[Report upload guidance requested]",
+                "[Use /reports/analyze]",
+            )
+        else:
+            self.store.add_turn(session_id, request.message, result.answer)
 
         return ChatResponse(
             answer=result.answer,
@@ -77,9 +86,7 @@ def merge_sources(sources: Sequence[Source]) -> list[Source]:
     """Deduplicate sources, keeping the highest-scoring copy of each reference."""
     merged: dict[tuple[str, str], Source] = {}
     for source in sources:
-        key = (
-            ("url", source.url) if source.url else ("title", source.title)
-        )
+        key = ("url", source.url) if source.url else ("title", source.title)
         existing = merged.get(key)
         if existing is None or (source.score or 0) > (existing.score or 0):
             merged[key] = source

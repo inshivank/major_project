@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-import chromadb
-from chromadb.utils import embedding_functions
 
 from backend.config.settings import settings
 
@@ -28,13 +26,17 @@ class Retriever:
     ) -> None:
         self.persist_dir = str(persist_dir or settings.chroma_dir)
         self.collection_name = collection_name or settings.collection_name
-        self._embedding_function = embedding_functions.DefaultEmbeddingFunction()
-        self._client: chromadb.ClientAPI | None = None
+        self._embedding_function = None
+        self._client = None
         self._collection = None
 
     @property
     def collection(self):
         if self._collection is None:
+            import chromadb
+            from chromadb.utils import embedding_functions
+
+            self._embedding_function = embedding_functions.DefaultEmbeddingFunction()
             self._client = chromadb.PersistentClient(path=self.persist_dir)
             self._collection = self._client.get_or_create_collection(
                 name=self.collection_name,
@@ -42,6 +44,17 @@ class Retriever:
                 metadata={"hnsw:space": "cosine"},
             )
         return self._collection
+
+    def retrieve_for_report(self, queries: list[str], timeout: float, memory_mb: int):
+        """Same Chroma collection, isolated to bound embedding/model-loading work."""
+        from backend.reports.isolation import run_isolated
+
+        return run_isolated(
+            _report_retrieval,
+            (self.persist_dir, self.collection_name, queries),
+            timeout,
+            memory_mb,
+        )
 
     def count(self) -> int:
         return self.collection.count()
@@ -75,3 +88,8 @@ class Retriever:
                 )
             )
         return chunks
+
+
+def _report_retrieval(persist_dir, collection_name, queries):
+    retriever = Retriever(persist_dir=persist_dir, collection_name=collection_name)
+    return [chunk for query in queries for chunk in retriever.retrieve(query, k=2)]

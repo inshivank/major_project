@@ -32,5 +32,8 @@ htmlcov/
 Thumbs.db
 .DS_Store
 # Evaluation outputs
-reports/
+/reports/
 
+
+# Local OCR runtime and package-manager cache
+.runtime/
