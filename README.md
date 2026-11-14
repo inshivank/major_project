@@ -1,4 +1,4 @@
-# CoreCare
+
 
 **CoreCare: An LLM-Driven Multi-Agent Framework for Intelligent Healthcare Services**
 
@@ -177,5 +177,3 @@ Optional smoke checks:
 - Week 4: Medical Report agent (upload, OCR, lab explanation)
 - Week 5: Clinical Record agent (predictions with LLM explanation)
 - Week 6: Multi-agent collaboration, fusion, evaluation, UI
-
-See [`docs/plan-week2.md`](docs/plan-week2.md) for the detailed Week 2 plan.
