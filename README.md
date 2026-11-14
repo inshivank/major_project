@@ -1,4 +1,4 @@
-# CoreCare
+
 
 **CoreCare: An LLM-Driven Multi-Agent Framework for Intelligent Healthcare Services**
 
