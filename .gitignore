@@ -13,6 +13,9 @@ venv/
 .env.*
 !.env.example
 
+# Generated retrieval data
+data/chroma/
+
 # Test / tooling caches
 .pytest_cache/
 .mypy_cache/
@@ -28,3 +31,6 @@ htmlcov/
 # OS
 Thumbs.db
 .DS_Store
+# Evaluation outputs
+reports/
+
