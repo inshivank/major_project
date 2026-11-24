@@ -13,8 +13,10 @@ venv/
 .env.*
 !.env.example
 
-# Generated retrieval data
+# Generated retrieval and processed data
 data/chroma/
+data/processed/
+data/raw/
 
 # Test / tooling caches
 .pytest_cache/
@@ -31,6 +33,12 @@ htmlcov/
 # OS
 Thumbs.db
 .DS_Store
-# Evaluation outputs
-reports/
+# Evaluation outputs (Phase 1 result reports are tracked)
+reports/*
+!reports/metrics.json
+!reports/model_comparison.md
+
+# Read-only reference clone (clone separately)
+ColaCare-main/
+
 

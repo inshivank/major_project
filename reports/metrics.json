@@ -1,0 +1,80 @@
+[
+  {
+    "dataset": "mimic-iv-demo",
+    "task": "outcome",
+    "model": "AdaCare",
+    "best_epoch": 5,
+    "val_auprc": 0.1736,
+    "test_auroc": 0.3125,
+    "test_auprc": 0.1546,
+    "checkpoint": "checkpoints\\mimic_outcome_adacare.pt",
+    "predictions": "predictions\\mimic_outcome_adacare.pkl",
+    "test_patients": 28,
+    "test_positive_rate": 0.1429
+  },
+  {
+    "dataset": "mimic-iv-demo",
+    "task": "outcome",
+    "model": "MCGRU",
+    "best_epoch": 2,
+    "val_auprc": 0.2436,
+    "test_auroc": 0.3542,
+    "test_auprc": 0.1571,
+    "checkpoint": "checkpoints\\mimic_outcome_mcgru.pt",
+    "predictions": "predictions\\mimic_outcome_mcgru.pkl",
+    "test_patients": 28,
+    "test_positive_rate": 0.1429
+  },
+  {
+    "dataset": "mimic-iv-demo",
+    "task": "outcome",
+    "model": "RETAIN",
+    "best_epoch": 5,
+    "val_auprc": 0.6,
+    "test_auroc": 0.7604,
+    "test_auprc": 0.726,
+    "checkpoint": "checkpoints\\mimic_outcome_retain.pt",
+    "predictions": "predictions\\mimic_outcome_retain.pkl",
+    "test_patients": 28,
+    "test_positive_rate": 0.1429
+  },
+  {
+    "dataset": "mimic-iv-demo",
+    "task": "readmission",
+    "model": "AdaCare",
+    "best_epoch": 7,
+    "val_auprc": 0.7381,
+    "test_auroc": 0.447,
+    "test_auprc": 0.2204,
+    "checkpoint": "checkpoints\\mimic_readmission_adacare.pt",
+    "predictions": "predictions\\mimic_readmission_adacare.pkl",
+    "test_patients": 28,
+    "test_positive_rate": 0.2143
+  },
+  {
+    "dataset": "mimic-iv-demo",
+    "task": "readmission",
+    "model": "MCGRU",
+    "best_epoch": 1,
+    "val_auprc": 0.5917,
+    "test_auroc": 0.6023,
+    "test_auprc": 0.3299,
+    "checkpoint": "checkpoints\\mimic_readmission_mcgru.pt",
+    "predictions": "predictions\\mimic_readmission_mcgru.pkl",
+    "test_patients": 28,
+    "test_positive_rate": 0.2143
+  },
+  {
+    "dataset": "mimic-iv-demo",
+    "task": "readmission",
+    "model": "RETAIN",
+    "best_epoch": 8,
+    "val_auprc": 0.6667,
+    "test_auroc": 0.7424,
+    "test_auprc": 0.3661,
+    "checkpoint": "checkpoints\\mimic_readmission_retain.pt",
+    "predictions": "predictions\\mimic_readmission_retain.pkl",
+    "test_patients": 28,
+    "test_positive_rate": 0.2143
+  }
+]

@@ -8,6 +8,18 @@ python-dotenv==1.2.3
 groq==1.7.0
 chromadb==1.5.9
 
+# Data / preprocessing
+pandas==2.3.3
+scikit-learn==1.7.2
+numpy==1.26.4
+
+# Phase 1 model training (ColaCare pyehr models, read-only)
+torch==2.3.1
+lightning==2.3.3
+torchmetrics==1.4.0.post0
+matplotlib
+ipdb==0.13.13
+
 # Testing
 pytest==9.1.1
 httpx==0.28.1
