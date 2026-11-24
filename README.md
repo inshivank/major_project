@@ -111,6 +111,7 @@ The first run downloads the ChromaDB ONNX embedding model (~80 MB) into
 |---|---|
 | `GET /` | Health check |
 | `GET /config` | Public model/retrieval config (no secrets) |
+| `GET /demo` | Pop-up patient search UI backed by `/chat` |
 | `POST /chat` | Route a question to an agent (`patient_id`, `external_llm_consent` optional) |
 | `POST /reports/analyze` | Multipart medical PDF/image analysis |
 

@@ -12,7 +12,7 @@ from backend.agents.base import AgentResult
 from backend.agents.patient_agent import EMERGENCY_ANSWER, is_emergency
 from backend.config.settings import PROJECT_ROOT, settings
 from backend.llm.llm_service import LLMError, LLMService
-from backend.rag.retriever import Retriever, RetrievedChunk
+from backend.rag.retriever import RetrievedChunk, Retriever
 from backend.schemas.chat import ChatRequest, Intent, Source, SourceType
 
 PREDICTION_DIR = PROJECT_ROOT / "predictions"
@@ -25,14 +25,15 @@ TASKS = {
 MODELS = ("RETAIN", "AdaCare", "MCGRU")
 
 RETRIEVAL_QUERY = (
-    "ICU in-hospital mortality and 30-day readmission risk factors patient education"
+    "when to seek urgent care warning signs discharge planning follow-up patient safety"
 )
 
 SYSTEM_PROMPT = (
-    "You explain cached clinical model risk bands for a clinician. Use only the task "
-    "names, risk bands, and numbered reference passages supplied. Do not diagnose, "
-    "prescribe, invent patient details, or mention any identifier or record value. "
-    "Cite passages as [1], [2]. Keep the answer under 150 words and add a safety caveat."
+    "Write a brief explanation for a clinician using only the risk bands and reference "
+    "passages supplied. Use 2-3 short sentences for mortality and 2-3 for readmission, "
+    "then one sentence comparing the models. Do not use headings, percentages, patient "
+    "details, identifiers, or raw values. Cite passages as [1], [2]. Keep under 90 words "
+    "and add a safety caveat."
 )
 
 
@@ -91,6 +92,37 @@ def _resolve_record_id(
     return None
 
 
+def _format_value(value: object) -> str:
+    if isinstance(value, float):
+        return f"{value:.0f}" if value.is_integer() else f"{value:.1f}"
+    return str(value)
+
+
+def _display_value(label: str, value: object) -> str:
+    text = _format_value(value)
+    return f"{text}%" if label == "SpO₂" else text
+
+
+def _patient_line(records: pd.DataFrame | None, record_id: str) -> str:
+    parts = [f"Record {record_id}"]
+    if records is None or records.empty or "RecordID" not in records.columns:
+        return " · ".join(parts + ["stored EHR details unavailable"])
+    rows = records.loc[records["RecordID"].astype(str) == record_id]
+    if rows.empty:
+        return " · ".join(parts + ["stored EHR details unavailable"])
+    latest = rows.iloc[-1]
+    for column, label in (
+        ("Age", "Age"),
+        ("Sex", "Sex"),
+        ("Heart Rate", "HR"),
+        ("Oxygen saturation", "SpO₂"),
+    ):
+        if column in rows.columns and pd.notna(latest[column]):
+            parts.append(f"{label} {_display_value(label, latest[column])}")
+    parts.append(f"{len(rows)} hourly records")
+    return " · ".join(parts)
+
+
 def _record_source(records: pd.DataFrame | None, record_id: str) -> Source | None:
     if records is None or records.empty or "RecordID" not in records.columns:
         return None
@@ -99,19 +131,14 @@ def _record_source(records: pd.DataFrame | None, record_id: str) -> Source | Non
         return None
     latest = rows.iloc[-1]
     fields: list[str] = []
-    for column in (
-        "Age",
-        "Sex",
-        "Heart Rate",
-        "Oxygen saturation",
-        "Systolic blood pressure",
-        "Diastolic blood pressure",
-        "Respiratory rate",
-        "Temperature",
-        "GCS total",
+    for column, label in (
+        ("Age", "Age"),
+        ("Sex", "Sex"),
+        ("Heart Rate", "HR"),
+        ("Oxygen saturation", "SpO₂"),
     ):
         if column in rows.columns and pd.notna(latest[column]):
-            fields.append(f"{column}: {latest[column]}")
+            fields.append(f"{label} {_display_value(label, latest[column])}")
     detail = "; ".join(fields) if fields else "no numeric observations stored"
     snippet = f"{len(rows)} hourly records; latest {detail}."
     return Source(
@@ -121,30 +148,106 @@ def _record_source(records: pd.DataFrame | None, record_id: str) -> Source | Non
     )
 
 
-def _local_answer(record_id: str, scores: dict[str, float]) -> str:
+def _band_sentence(task: str, band: str) -> str:
+    if task == "outcome":
+        return {
+            "low": "Low risk band. This suggests a lower estimated chance of death during admission. Continue routine monitoring.",
+            "moderate": "Moderate risk band. This suggests a noticeable but not highest-level risk during admission. Interpret with the full clinical picture.",
+            "high": "High risk band. This suggests a substantially elevated risk during admission. Consider senior clinical review.",
+        }[band]
+    return {
+        "low": "Low risk band. This suggests a lower chance of returning within 30 days. Standard follow-up is reasonable.",
+        "moderate": "Moderate risk band. This suggests a moderate chance of returning within 30 days. Review discharge planning and follow-up.",
+        "high": "High risk band. This suggests a high chance of returning within 30 days. Arrange early follow-up planning.",
+    }[band]
+
+
+def _guidance(scores: dict[str, float]) -> list[str]:
+    bands = [_risk_band(scores[task]) for task in TASKS if task in scores]
     lines = [
-        f"Trained-model risk estimates for record {record_id} "
-        "(MIMIC-IV demo, research use only)."
+        "- Confirm this estimate with the treating clinician and full record.",
+        "- Review current observations and trajectory before escalation.",
     ]
-    for task, label in TASKS.items():
-        if task in scores:
-            score = scores[task]
-            lines.append(
-                f"- {label}: {score:.1%} ({_risk_band(score)} risk, RETAIN model)."
-            )
-    lines.append("")
-    lines.append("| Task | AdaCare | MCGRU | RETAIN |")
-    lines.append("|---|---:|---:|---:|")
+    if "high" in bands:
+        lines.append("- Consider earlier senior review given a high-band estimate.")
+    else:
+        lines.append("- Maintain routine monitoring and reassess if the condition changes.")
+    lines.append("- Discuss discharge and 30-day follow-up if admission is nearing completion.")
+    lines.append("- Seek urgent review for worsening breathing, chest pain, or reduced consciousness.")
+    return lines[:5]
+
+
+def _model_comparison(scores: dict[str, float]) -> str:
+    pairs = [
+        scores.get(f"{task}:{model}")
+        for task in TASKS
+        for model in ("AdaCare", "MCGRU", "RETAIN")
+    ]
+    if any(value is None for value in pairs):
+        return "A complete three-model comparison is unavailable for this record."
+    retain_highest = all(
+        scores[f"{task}:RETAIN"] >= scores[f"{task}:{model}"]
+        for task in TASKS
+        for model in ("AdaCare", "MCGRU")
+    )
+    if retain_highest:
+        return (
+            "RETAIN gives the highest estimate on both tasks in this record. AdaCare is "
+            "lowest for readmission; MCGRU sits between. Treat these differences as "
+            "illustrative on the small demo test set."
+        )
+    return (
+        "RETAIN is not uniformly highest in this record. The models differ modestly, so "
+        "treat the comparison as illustrative on the small demo test set."
+    )
+
+
+def _local_answer(
+    record_id: str,
+    scores: dict[str, float],
+    patient_line: str,
+    references: list[Source],
+) -> str:
+    lines = ["Patient", patient_line, "", "Risk predictions"]
+    lines.append("Task | AdaCare | MCGRU | RETAIN")
     for task, label in TASKS.items():
         cells = []
         for model in ("AdaCare", "MCGRU", "RETAIN"):
             key = f"{task}:{model}"
-            cells.append(f"{scores[key]:.1%}" if key in scores else "n/a")
-        lines.append(f"| {label} | {' | '.join(cells)} |")
-    lines.append("")
-    lines.append(
-        "These are research estimates, not a diagnosis. Confirm with a clinician "
-        "and the full patient record before acting."
+            cells.append(f"{scores[key]:.1%}" if key in scores else "unavailable")
+        lines.append(f"{label} | {' | '.join(cells)}")
+
+    lines.extend(["", "Risk explanation"])
+    for task, label in (("outcome", "Mortality"), ("readmission", "Readmission")):
+        if task in scores:
+            lines.append(f"- {label}: {_band_sentence(task, _risk_band(scores[task]))}")
+        else:
+            lines.append(f"- {label}: Unavailable.")
+
+    lines.extend(["", "Model comparison", _model_comparison(scores)])
+    lines.extend(["", "Patient guidance"])
+    lines.extend(_guidance(scores))
+
+    lines.extend(["", "Clinical references"])
+    if references:
+        for index, source in enumerate(references[:3], start=1):
+            suffix = f" — {source.url}" if source.url else ""
+            lines.append(f"[{index}] {source.title}{suffix}")
+    else:
+        lines.append("No local references available.")
+
+    mortality_band = _risk_band(scores["outcome"]) if "outcome" in scores else "unavailable"
+    readmission_band = (
+        _risk_band(scores["readmission"]) if "readmission" in scores else "unavailable"
+    )
+    lines.extend(
+        [
+            "",
+            "Final summary",
+            f"Overall, this demo record shows {mortality_band} mortality and "
+            f"{readmission_band} readmission risk. RETAIN is the primary estimate. "
+            "Use this as decision support, not a diagnosis.",
+        ]
     )
     return "\n".join(lines)
 
@@ -228,18 +331,20 @@ class ClinicalAgent:
                 if (task, model) in score_map:
                     scores[key] = score_map[(task, model)][record_id]
 
-        answer = _local_answer(record_id, scores)
         sources: list[Source] = []
         record_source = _record_source(records, record_id)
         if record_source is not None:
             sources.append(record_source)
         sources.extend(_model_sources_for_record(score_map, record_id))
 
+        chunks = self._retrieve_references()
+        references = self._to_reference_sources(chunks)
+        sources.extend(references)
+
+        answer = _local_answer(record_id, scores, _patient_line(records, record_id), references)
         if request.external_llm_consent:
-            explanation, references = self._explain(scores)
-            if explanation:
-                answer += f"\n\nExplanation:\n{explanation}"
-            sources.extend(references)
+            note = self._explain(scores, chunks)
+            answer += f"\n\nPlain-language note\n{note}"
 
         return AgentResult(
             answer=answer,
@@ -248,15 +353,15 @@ class ClinicalAgent:
             sources=sources,
         )
 
-    def _explain(
-        self, scores: dict[str, float]
-    ) -> tuple[str, list[Source]]:
-        chunks: list[RetrievedChunk] = []
+    def _retrieve_references(self) -> list[RetrievedChunk]:
         try:
-            chunks = self.retriever.retrieve(RETRIEVAL_QUERY, k=self.top_k)
+            return self.retriever.retrieve(RETRIEVAL_QUERY, k=3)
         except Exception:
-            chunks = []
+            return []
 
+    def _explain(
+        self, scores: dict[str, float], chunks: list[RetrievedChunk]
+    ) -> str:
         context = "\n\n".join(
             f"[{index}] {chunk.title}\n{chunk.text}"
             for index, chunk in enumerate(chunks, start=1)
@@ -272,26 +377,36 @@ class ClinicalAgent:
                 "role": "user",
                 "content": (
                     f"Risk bands:\n{bands}\n\nReference passages:\n{context}\n\n"
-                    "Explain what the bands mean in general terms."
+                    "Explain the bands briefly. Do not repeat the table."
                 ),
             },
         ]
         try:
-            explanation = self.llm.complete(messages)
+            return self.llm.complete(messages)
         except LLMError:
-            return "Live explanation was unavailable; local model scores are shown above.", []
+            return "Live explanation was unavailable; the local scores above remain valid."
 
-        references = [
-            Source(
-                type=SourceType.REFERENCE,
-                title=chunk.title,
-                url=chunk.url,
-                snippet=_snippet(chunk.text),
-                score=chunk.score,
+    @staticmethod
+    def _to_reference_sources(chunks: list[RetrievedChunk]) -> list[Source]:
+        sources: list[Source] = []
+        seen: set[tuple[str, str]] = set()
+        for chunk in chunks:
+            key = (chunk.title, chunk.url)
+            if key in seen:
+                continue
+            seen.add(key)
+            sources.append(
+                Source(
+                    type=SourceType.REFERENCE,
+                    title=chunk.title,
+                    url=chunk.url,
+                    snippet=_snippet(chunk.text),
+                    score=chunk.score,
+                )
             )
-            for chunk in chunks
-        ]
-        return explanation, references
+            if len(sources) == 3:
+                break
+        return sources
 
 
 def _model_sources_for_record(

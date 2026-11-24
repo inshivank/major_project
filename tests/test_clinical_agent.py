@@ -56,7 +56,7 @@ def make_agent(clinical_data, llm=None, retriever=None):
     prediction_dir, records_path = clinical_data
     return ClinicalAgent(
         llm=llm or FakeLLM(),
-        retriever=retriever or FakeRetriever([]),
+        retriever=retriever or FakeRetriever(),
         prediction_dir=prediction_dir,
         records_path=records_path,
     )
@@ -71,8 +71,8 @@ def test_exact_record_id_returns_scores_and_sources(clinical_data):
     assert result.status == "ok"
     assert "72.0%" in result.answer
     assert "31.0%" in result.answer
-    assert "| In-hospital mortality | 55.0% | 61.0% | 72.0% |" in result.answer
-    assert "| 30-day readmission | 48.0% | 42.0% | 31.0% |" in result.answer
+    assert "In-hospital mortality | 55.0% | 61.0% | 72.0%" in result.answer
+    assert "30-day readmission | 48.0% | 42.0% | 31.0%" in result.answer
     assert any(source.type is SourceType.RECORD for source in result.sources)
     assert sum(source.type is SourceType.MODEL for source in result.sources) == 6
 
@@ -95,7 +95,9 @@ def test_without_consent_llm_is_not_called(clinical_data):
     )
 
     assert llm.calls == []
-    assert not any(source.type is SourceType.REFERENCE for source in result.sources)
+    assert any(source.type is SourceType.REFERENCE for source in result.sources)
+    assert "Clinical references" in result.answer
+    assert "Final summary" in result.answer
 
 
 def test_consent_explains_without_sending_patient_values(clinical_data):
@@ -124,6 +126,7 @@ def test_consent_explains_without_sending_patient_values(clinical_data):
     assert "Heart Rate" not in prompt
     assert "high" in prompt
     assert "General factors" in result.answer
+    assert "Plain-language note" in result.answer
     assert any(source.type is SourceType.REFERENCE for source in result.sources)
 
 

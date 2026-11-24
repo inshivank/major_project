@@ -3,7 +3,7 @@
 from functools import lru_cache
 
 from fastapi import Depends, FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from starlette.concurrency import run_in_threadpool
 from threading import BoundedSemaphore
 from backend.agents.report_agent import ReportAgent
@@ -11,7 +11,7 @@ from backend.reports.errors import ReportError
 from backend.reports.upload import ReportUploadLimit, read_upload
 from backend.schemas.report import ReportResponse
 
-from backend.config.settings import settings
+from backend.config.settings import PROJECT_ROOT, settings
 from backend.llm.llm_service import LLMError
 from backend.orchestrator.orchestrator import Orchestrator
 from backend.schemas.chat import ChatRequest, ChatResponse, Intent
@@ -37,6 +37,11 @@ def get_orchestrator() -> Orchestrator:
 @app.get("/")
 async def health_check():
     return {"message": "CoreCare API is running"}
+
+
+@app.get("/demo", include_in_schema=False)
+async def demo_page():
+    return FileResponse(PROJECT_ROOT / "backend" / "ui" / "demo.html", media_type="text/html")
 
 
 @app.get("/config")
