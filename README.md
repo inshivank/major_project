@@ -330,3 +330,39 @@ precedence, so an unavailable old model must also be updated locally. The synthe
 verifier returned a completed consented response with validated record/reference
 citations; all 148 offline tests pass. See the implementation report for the original
 failure trace and the fixes. Missing keys or invalid citations still fail verification.
+
+
+### PDF upload fixtures and troubleshooting
+
+Generate the labelled synthetic samples and inert security regression PDFs:
+
+```powershell
+.venv\Scripts\python -m scripts.generate_report_fixtures
+.venv\Scripts\python -m uvicorn backend.main:app --reload --host 127.0.0.1 --port 8001
+```
+
+If CoreCare is already running on 8001, reuse it rather than starting a competing
+server. Open `http://127.0.0.1:8001/docs`, select `POST /reports/analyze`, and choose
+`tests/fixtures/reports/cbc_text.pdf` using the file picker. Clear/reselect any old
+file selection. Use `external_llm_consent=false` for local processing; HTTP 200 with
+`status=partial` and an absent-consent warning is expected. Explicit `true` allows
+live Groq educational explanations. The sample contains synthetic Hemoglobin 10.0,
+WBC 12000 and platelets 250000, each with its own stated range and unit.
+
+PDF active-content checks inspect actual parsed names, including escaped names and
+compressed objects. Harmless keyword text in metadata or page streams is accepted;
+attachments and unsupported actions remain rejected. Do not bypass an `unsafe_pdf`
+error for a real document. PNG/JPEG and scanned-PDF samples are in the same directory;
+OCR readings remain uncertain even when the synthetic values are recovered correctly.
+
+```powershell
+.venv\Scripts\python -m pytest tests/test_pdf_security.py -q
+.venv\Scripts\python -m scripts.verify_pdf_upload --base-url http://127.0.0.1:8001 --consent
+```
+
+The 2026-11-24 verification passed 189 offline tests and the actual HTTP/OCR/Groq
+checks. The original supplied `test_report.pdf` was accepted before and after the
+fix; its historical Swagger rejection was not reproducible. An independent harmless
+metadata false positive was reproduced and fixed with identical-byte evidence.
+See ignored `reports/runtime/week4_pdf_fix_verification.md` for complete results,
+file lists, response examples and exact manual Swagger instructions.

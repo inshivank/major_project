@@ -1,7 +1,6 @@
 """Content validation and bounded, page-attributed extraction using PyMuPDF/Tesseract."""
 
 import io
-import re
 import time
 import warnings
 from PIL import Image, ImageOps, UnidentifiedImageError
@@ -10,6 +9,7 @@ import pytesseract
 from backend.config.settings import Settings, settings
 from backend.reports.errors import ReportError
 from backend.reports.isolation import run_isolated
+from backend.reports.pdf_security import validate_pdf_content
 from backend.schemas.report import Extraction, Segment
 
 
@@ -173,32 +173,8 @@ class DocumentExtractor:
                 raise ReportError(
                     "page_limit", "PDF page count is outside the allowed limit.", 413
                 )
-            # Do not execute or retain embedded files, actions, or scripts.
-            if document.embfile_count() or any(
-                token in data
-                for token in (b"/JavaScript", b"/JS", b"/Launch", b"/OpenAction")
-            ):
-                raise ReportError(
-                    "unsafe_pdf",
-                    "PDF attachments and active content are not supported.",
-                )
-            if document.xref_length() > 20000:
-                raise ReportError(
-                    "unsafe_pdf", "PDF object count exceeds the processing limit.", 413
-                )
-            for xref in range(1, document.xref_length()):
-                self._remaining(deadline)
-                obj = document.xref_object(xref)
-                # Decode PDF name escapes before checking actions inside compressed object streams.
-
-                obj = re.sub(r"#([0-9a-fA-F]{2})", lambda m: chr(int(m[1], 16)), obj)
-                if re.search(
-                    r"/(?:JavaScript|JS|Launch|OpenAction|AA|RichMedia|EmbeddedFile)\b",
-                    obj,
-                ):
-                    raise ReportError(
-                        "unsafe_pdf", "PDF active content is not supported."
-                    )
+            # Inspect parsed names, not incidental bytes in strings or binary streams.
+            validate_pdf_content(document, lambda: self._remaining(deadline))
             result = Extraction(page_count=len(document))
             total = 0
             for index, page in enumerate(document, 1):
