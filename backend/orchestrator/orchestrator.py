@@ -7,8 +7,9 @@ import uuid
 from collections.abc import Sequence
 
 from backend.agents.base import Agent, AgentResult
+from backend.agents.clinical_agent import ClinicalAgent
 from backend.agents.patient_agent import PatientAgent
-from backend.agents.stubs import ClinicalAgent, ReportAgent
+from backend.agents.report_agent import ReportAgent
 from backend.config.settings import settings
 from backend.llm.llm_service import LLMService
 from backend.orchestrator.router import Router
@@ -41,7 +42,7 @@ class Orchestrator:
             agents=[
                 PatientAgent(retriever=retriever, llm=llm),
                 ReportAgent(retriever=retriever, llm=llm),
-                ClinicalAgent(),
+                ClinicalAgent(retriever=retriever, llm=llm),
             ],
             router=Router(llm=llm),
         )

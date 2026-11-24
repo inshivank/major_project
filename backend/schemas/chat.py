@@ -33,6 +33,7 @@ class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=4000)
     session_id: str | None = None
     patient_id: str | None = None
+    external_llm_consent: bool = False
 
 
 class ChatResponse(BaseModel):

@@ -13,6 +13,7 @@ def test_chat_request_optional_fields_default_to_none():
     request = ChatRequest(message="hello")
     assert request.session_id is None
     assert request.patient_id is None
+    assert request.external_llm_consent is False
 
 
 def test_chat_request_rejects_overlong_message():

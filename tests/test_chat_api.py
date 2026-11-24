@@ -1,8 +1,9 @@
 import pytest
 from fastapi.testclient import TestClient
 
+from backend.agents.clinical_agent import ClinicalAgent
 from backend.agents.patient_agent import PatientAgent
-from backend.agents.stubs import ClinicalAgent, ReportAgent
+from backend.agents.report_agent import ReportAgent
 from backend.llm.llm_service import LLMError, LLMService
 from backend.main import app, get_orchestrator
 from backend.orchestrator.orchestrator import Orchestrator

@@ -9,7 +9,7 @@ research framework.
 > Medical safety notice: CoreCare is a research/educational project, **not** a medical
 > diagnosis system. It is not a substitute for professional medical advice or care.
 
-## Current Status (Week 4 — Medical Report Analysis)
+## Current Status (Weeks 4–5 — Report and Clinical Record Agents)
 
 The online path works end to end: request routing, Groq LLM service, ChromaDB medical
 retrieval, and the Patient Assistance agent with safety guardrails.
@@ -22,8 +22,8 @@ retrieval, and the Patient Assistance agent with safety guardrails.
 | Intent router (rules first, LLM fallback) | Done |
 | Agent 1: Patient Assistance (RAG + citations + guardrails) | Done |
 | Agent 2: Medical Report Analysis | Upload, local extraction/OCR, ranges, consent-gated RAG explanation |
-| Agent 3: Clinical Record Analysis (predictions) | Stub, Week 3+ |
-| Phase 1 model training (AdaCare / MCGRU / RETAIN) | Not started |
+| Agent 3: Clinical Record Analysis (predictions) | Done (local EHR lookup, model scores, consent-gated explanation) |
+| Phase 1 model training (AdaCare / MCGRU / RETAIN) | Done (6 models on MIMIC-IV demo; full dataset pending) |
 
 ## Architecture
 
@@ -33,7 +33,7 @@ Doctor -> POST /chat -> Orchestrator -> Router (rules -> LLM fallback)
               +-----------------------------+-----------------------------+
               |                             |                             |
       Patient Assistance            Report Understanding          Clinical Record
-      (Groq + RAG)                  (upload endpoint)             (stub)
+      (Groq + RAG)                  (upload endpoint)             (EHR + model scores)
               |                             |                             |
               +-----------------------------+-----------------------------+
                                             |
@@ -111,7 +111,7 @@ The first run downloads the ChromaDB ONNX embedding model (~80 MB) into
 |---|---|
 | `GET /` | Health check |
 | `GET /config` | Public model/retrieval config (no secrets) |
-| `POST /chat` | Route a question to an agent |
+| `POST /chat` | Route a question to an agent (`patient_id`, `external_llm_consent` optional) |
 | `POST /reports/analyze` | Multipart medical PDF/image analysis |
 
 Example:
@@ -142,6 +142,22 @@ Response shape:
 Send `session_id` back to keep conversation context. Emergency messages short-circuit
 the LLM and return immediate advice to contact local emergency services. Diagnosis and
 prescription requests are refused deterministically.
+
+For Agent 3, send `patient_id` (a `RecordID` from `data/processed/mimic_demo_formatted.csv`,
+or a `PatientID` that maps to one). Risk scores come from `predictions/*.pkl`. Local EHR
+and model sources are always returned; set `external_llm_consent=true` to allow Groq to
+explain only the task names, risk bands, and retrieved references — never the patient ID
+or raw record values.
+
+```powershell
+$body = @{
+  message = "Predict mortality and readmission risk for this record"
+  patient_id = "10001217_34592300"
+  external_llm_consent = $true
+} | ConvertTo-Json
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/chat `
+  -ContentType "application/json" -Body $body
+```
 
 ## Tests
 
@@ -174,9 +190,9 @@ Optional smoke checks:
 
 - Week 1: Foundation (FastAPI skeleton, tests, repo layout) — done
 - Week 2: Online phase foundation: Groq, RAG, Agent 1, orchestrator, `/chat` — done
-- Week 3: Phase 1 models (AdaCare / MCGRU / RETAIN) + EHR record retrieval
+- Week 3: Phase 1 models (AdaCare / MCGRU / RETAIN) + EHR record retrieval — done on demo
 - Week 4: Medical Report agent (upload, OCR, lab explanation) — implemented; runtime setup below
-- Week 5: Clinical Record agent (predictions with LLM explanation)
+- Week 5: Clinical Record agent (predictions with LLM explanation) — done
 - Week 6: Multi-agent collaboration, fusion, evaluation, UI
 
 ## Medical Report Agent

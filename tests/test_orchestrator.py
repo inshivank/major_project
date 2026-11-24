@@ -1,5 +1,6 @@
+from backend.agents.clinical_agent import ClinicalAgent
 from backend.agents.patient_agent import PatientAgent
-from backend.agents.stubs import ClinicalAgent, ReportAgent
+from backend.agents.report_agent import ReportAgent
 from backend.orchestrator.orchestrator import Orchestrator, merge_sources
 from backend.orchestrator.router import Router
 from backend.orchestrator.session_store import SessionStore
@@ -46,7 +47,7 @@ def test_generated_session_id_is_reused_across_turns():
     assert len(orchestrator.store.history(first.session_id)) == 4
 
 
-def test_prediction_routes_to_stub_without_fabricating():
+def test_prediction_without_patient_id_is_not_available():
     response = build_orchestrator().chat(
         ChatRequest(message="What is the mortality risk for this patient?")
     )
@@ -54,7 +55,7 @@ def test_prediction_routes_to_stub_without_fabricating():
     assert response.agent == "clinical_agent"
     assert response.intent is Intent.PREDICTION
     assert response.status == "not_available"
-    assert "No prediction has been generated" in response.answer
+    assert "patient_id" in response.answer
 
 
 def test_report_question_routes_to_report_stub():
