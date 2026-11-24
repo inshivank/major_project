@@ -40,36 +40,12 @@ class ClinicalAgent:
         history: Sequence[dict[str, str]] | None = None,
     ) -> AgentResult:
         return AgentResult(
-            answer=self._MESSAGES.get(
-                intent, "This capability is not available yet."
-            ),
+            answer=self._MESSAGES.get(intent, "This capability is not available yet."),
             agent=self.name,
             intent=intent,
             status="not_available",
         )
 
 
-class ReportAgent:
-    """Medical report understanding with OCR (Weeks 4+)."""
-
-    name = "report_agent"
-
-    def handles(self, intent: Intent) -> bool:
-        return intent is Intent.REPORT_EXPLANATION
-
-    def handle(
-        self,
-        request: ChatRequest,
-        intent: Intent,
-        history: Sequence[dict[str, str]] | None = None,
-    ) -> AgentResult:
-        return AgentResult(
-            answer=(
-                "Report understanding is not available yet. Document upload, OCR, "
-                "and lab-result explanation are planned for a later week. No report "
-                "was analysed."
-            ),
-            agent=self.name,
-            intent=intent,
-            status="not_available",
-        )
+# Backward-compatible import; the implementation now lives in its own module.
+from backend.agents.report_agent import ReportAgent  # noqa: F401, E402

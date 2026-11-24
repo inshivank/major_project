@@ -33,12 +33,7 @@ htmlcov/
 # OS
 Thumbs.db
 .DS_Store
-# Evaluation outputs (Phase 1 result reports are tracked)
-reports/*
-!reports/metrics.json
-!reports/model_comparison.md
-
-# Read-only reference clone (clone separately)
-ColaCare-main/
 
 
+# Local OCR runtime and package-manager cache
+.runtime/

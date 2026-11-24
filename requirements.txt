@@ -7,6 +7,9 @@ python-dotenv==1.2.3
 # LLM + retrieval
 groq==1.7.0
 chromadb==1.5.9
+# Compatible Windows wheels verified under this machine's application-control policy
+grpcio==1.76.0; sys_platform == "win32"
+pybase64==1.4.2; sys_platform == "win32"
 
 # Data / preprocessing
 pandas==2.3.3
@@ -23,3 +26,9 @@ ipdb==0.13.13
 # Testing
 pytest==9.1.1
 httpx==0.28.1
+# Medical document processing
+PyMuPDF==2.1
+Pillow==13.0.0
+pytesseract==0.3.13
+python-multipart==0.0.33
+psutil==7.2.2

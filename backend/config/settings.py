@@ -16,10 +16,10 @@ class Settings(BaseSettings):
     )
 
     groq_api_key: str = ""
-    groq_base_url: str = "https://api.groq.com/openai/v1"
-    llm_model: str = "llama-3.3-70b-versatile"
+    groq_base_url: str = "https://api.groq.com"
+    llm_model: str = "openai/gpt-oss-20b"
     llm_temperature: float = 0.2
-    llm_max_tokens: int = 1024
+    llm_max_tokens: int = 2048
     llm_timeout_seconds: float = 30.0
     llm_max_retries: int = 3
 
@@ -32,6 +32,19 @@ class Settings(BaseSettings):
 
     session_max_turns: int = 20
     session_max_sessions: int = 20
+
+    report_upload_timeout_seconds: float = Field(default=30, gt=0, le=300)
+    report_max_upload_bytes: int = Field(
+        default=10 * 1024 * 1024, ge=1024, le=50 * 1024 * 1024
+    )
+    report_max_pdf_pages: int = Field(default=10, ge=1, le=100)
+    report_max_image_pixels: int = Field(default=20_000_000, ge=10000, le=50_000_000)
+    report_max_text_chars: int = Field(default=100_000, ge=1000, le=1_000_000)
+    report_ocr_timeout_seconds: float = Field(default=15, gt=0, le=120)
+    report_processing_timeout_seconds: float = Field(default=120, gt=0, le=600)
+    report_max_concurrent: int = Field(default=2, ge=1, le=8)
+    report_worker_memory_mb: int = Field(default=512, ge=128, le=4096)
+    tesseract_cmd: str = ""
 
     disclaimer: str = (
         "This is AI-generated decision support for research and education. "

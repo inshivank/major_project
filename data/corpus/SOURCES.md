@@ -26,3 +26,20 @@ No source text is reproduced verbatim.
   record the licence here.
 - Emergency numbers are jurisdiction-specific. The system must direct users to their
   local emergency number rather than assume one country.
+
+## Week 4 laboratory education
+
+`lab_tests.json` contains six original short summaries, without universal reference
+ranges or treatment instructions. Sources verified on 2026-11-14:
+
+- [Complete blood count: what the measurements describe](https://medlineplus.gov/lab-tests/complete-blood-count-cbc/)
+- [Cholesterol and lipid profile tests](https://medlineplus.gov/lab-tests/cholesterol-levels/)
+- [Creatinine and kidney filtration](https://medlineplus.gov/lab-tests/creatinine-test/)
+- [Liver panel measurements](https://medlineplus.gov/lab-tests/liver-function-tests/)
+- [TSH and thyroid testing](https://medlineplus.gov/lab-tests/tsh-thyroid-stimulating-hormone-test/)
+- [HbA1c and blood glucose](https://medlineplus.gov/lab-tests/hemoglobin-a1c-hba1c-test/)
+
+These are original paraphrases of US National Library of Medicine patient education,
+not reproductions of source articles. The summaries are provided under this
+repository's existing corpus terms; upstream pages retain their own terms and
+third-party notices. Re-ingest the existing collection to include these documents.

@@ -7,11 +7,22 @@ import re
 
 from backend.llm.llm_service import LLMError, LLMService
 from backend.schemas.chat import Intent
+from backend.reports.parser import LABELS
 
 logger = logging.getLogger(__name__)
 
+LAB_MEASUREMENT_PATTERN = re.compile(
+    r"\b(?:"
+    + "|".join(re.escape(alias) for alias, _ in LABELS)
+    + r")[\s:|]+(?:[<>\u2264\u2265]=?\s*)?[+-]?(?:\d+(?:\.\d+)?|\.\d+)\b",
+    re.IGNORECASE,
+)
+
 REPORT_PATTERNS = (
-    re.compile(r"\b(lab|blood|urine|pathology) (result|test|report)s?\b", re.IGNORECASE),
+    LAB_MEASUREMENT_PATTERN,
+    re.compile(
+        r"\b(lab|blood|urine|pathology) (result|test|report)s?\b", re.IGNORECASE
+    ),
     re.compile(r"\b(report|scan|x-?ray|mri|ct scan|ecg|ekg)\b", re.IGNORECASE),
     re.compile(r"\bexplain (this|the|my) (report|result|scan)\b", re.IGNORECASE),
     re.compile(r"\b(upload|attach) (a |the )?(report|scan|document)\b", re.IGNORECASE),
@@ -20,8 +31,13 @@ REPORT_PATTERNS = (
 PREDICTION_PATTERNS = (
     re.compile(r"\b(predict|prediction|prognosis)\b", re.IGNORECASE),
     re.compile(r"\brisk of (death|dying|mortality|readmission)\b", re.IGNORECASE),
-    re.compile(r"\b(mortality|readmission|survival) (risk|probability|chance)\b", re.IGNORECASE),
-    re.compile(r"\b(will (he|she|they|the patient) (die|survive|be readmitted))\b", re.IGNORECASE),
+    re.compile(
+        r"\b(mortality|readmission|survival) (risk|probability|chance)\b", re.IGNORECASE
+    ),
+    re.compile(
+        r"\b(will (he|she|they|the patient) (die|survive|be readmitted))\b",
+        re.IGNORECASE,
+    ),
 )
 
 RECORD_PATTERNS = (
