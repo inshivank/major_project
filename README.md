@@ -2,9 +2,9 @@
 
 **CoreCare: An LLM-Driven Multi-Agent Framework for Intelligent Healthcare Services**
 
-A B.Tech major project that builds an application layer for LLM-powered healthcare
+<!-- A B.Tech major project that builds an application layer for LLM-powered healthcare
 services on top of the open-source [ColaCare](https://github.com/PKU-AICare/ColaCare)
-research framework.
+research framework. -->
 
 > Medical safety notice: CoreCare is a research/educational project, **not** a medical
 > diagnosis system. It is not a substitute for professional medical advice or care.
