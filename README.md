@@ -9,6 +9,140 @@ research framework. -->
 > Medical safety notice: CoreCare is a research/educational project, **not** a medical
 > diagnosis system. It is not a substitute for professional medical advice or care.
 
+## Quick Start — Live Demo
+
+Use the existing setup on this Windows machine. No dependency installation or
+knowledge-base rebuild is needed for each demonstration.
+
+### One-command startup (recommended)
+
+From PowerShell, run:
+
+```powershell
+Set-Location -LiteralPath 'C:\Users\Aanya Aggarwal\Downloads\major_project'
+.\start-demo.ps1
+```
+
+The launcher resolves its own project directory, checks dependencies/configuration
+and the existing Chroma collection, starts each missing service in a separate
+PowerShell terminal, waits for readiness, and opens CoreCare in your default
+browser. It reuses healthy CoreCare services and stops with a clear message if a
+port is occupied by an unrecognized service. It never installs packages, rebuilds
+the corpus, prints keys, or sends a Groq request. AI consent is given in the UI.
+Stop a service with **Ctrl+C** in its terminal; close that terminal when finished.
+The launcher also accepts `-NoBrowser` and optional `-BackendPort` / `-FrontendPort`
+overrides; the defaults below match the existing frontend proxy.
+
+For manual startup, use these two terminals instead:
+
+### Terminal 1 — Start Backend
+
+```powershell
+Set-Location -LiteralPath 'C:\Users\Aanya Aggarwal\Downloads\major_project'
+. .\.venv\Scripts\Activate.ps1
+python -m uvicorn backend.main:app --host 127.0.0.1 --port 8001
+```
+
+### Terminal 2 — Start Frontend
+
+```powershell
+Set-Location -LiteralPath 'C:\Users\Aanya Aggarwal\Downloads\major_project\frontend'
+$env:CORECARE_BACKEND_URL = 'http://127.0.0.1:8001'
+npm.cmd run dev -- --port 5173 --strictPort
+```
+
+`--strictPort` prevents Vite from silently choosing another port. The launcher
+uses `.venv\Scripts\python.exe` directly, so activation is unnecessary for it.
+Neither path changes PowerShell execution policy; managed machines must permit
+running the local scripts under their existing policy.
+
+### Application URLs
+
+| Application | URL |
+|---|---|
+| CoreCare frontend | [http://127.0.0.1:5173](http://127.0.0.1:5173) |
+| FastAPI backend | [http://127.0.0.1:8001](http://127.0.0.1:8001) |
+| Swagger API documentation | [http://127.0.0.1:8001/docs](http://127.0.0.1:8001/docs) |
+| Backend health endpoint (`GET /`) | [http://127.0.0.1:8001/](http://127.0.0.1:8001/) |
+
+### Demo Medical Report
+
+Upload the existing **synthetic** text-based CBC PDF:
+
+```text
+C:\Users\Aanya Aggarwal\Downloads\major_project\tests\fixtures\reports\cbc_text.pdf
+```
+
+Repository-relative path: `tests/fixtures/reports/cbc_text.pdf`. Expected values:
+hemoglobin **10.0 g/dL** (12–16, below range), white blood cell count
+**12000 cells/uL** (4000–11000, above range), and platelets **250000 cells/uL**
+(150000–450000, within range). This PDF does not require OCR.
+
+### Prerequisites and configuration
+
+- Existing Python virtual environment: `.venv/`; backend dependencies are pinned
+  in `requirements.txt`. Node.js/npm and installed `frontend/node_modules` are
+  required. Follow the full setup below once if anything is missing.
+- Backend settings load the project-root `.env` and process environment through
+  `backend/config/settings.py`. `GROQ_API_KEY` is needed for live explanations;
+  never put it in frontend configuration. `LLM_MODEL` defaults to
+  `openai/gpt-oss-20b` and `GROQ_BASE_URL` to `https://api.groq.com`.
+  Internet, a valid key, provider availability, and per-upload consent are needed
+  for AI explanations. With consent unchecked, extraction/range comparisons stay
+  local; provider errors retain local results with an explicit fallback warning.
+- Chroma runs locally inside the backend; no separate database server is needed.
+  Defaults: `CORPUS_DIR=data/corpus`, `CHROMA_DIR=data/chroma`, and
+  `COLLECTION_NAME=corecare_medical` (paths resolve from the repository).
+  The existing collection is already populated. If setting up a new copy or the
+  launcher reports an empty/missing collection, initialize it **once** from the
+  project root: `.\.venv\Scripts\python.exe -m backend.rag.ingest`.
+  Initial embedding-model download may require internet; retain its cache for RAG.
+- Scanned PDFs/images additionally need Tesseract with English language data,
+  resolved through `TESSERACT_CMD` or `PATH`. The launcher checks this and warns
+  if unavailable. PyMuPDF handles the text-based demo PDF; Pillow, pytesseract,
+  python-multipart, and psutil support upload/extraction and bounded processing.
+- `CORECARE_BACKEND_URL` controls the Vite proxy; the commands above set it to
+  the demo backend. Keep optional `VITE_API_BASE_URL` empty for this local setup.
+  The remaining optional settings and limits are documented in `.env.example`.
+
+### Live demonstration checklist
+
+1. Start CoreCare.
+2. Open the Medical Report Analysis Agent.
+3. Maximize the analysis window.
+4. Upload the synthetic CBC medical report.
+5. Enable consent for AI explanations.
+6. Click **Analyze Report**.
+7. Demonstrate extracted medical parameters.
+8. Demonstrate reference range visualizations.
+9. Demonstrate AI-generated explanations.
+10. Demonstrate RAG citations and questions to discuss with a doctor.
+
+### Verified demo behavior (2026-11-27)
+
+- The launcher reused the existing services on 8001/5173 and opened the default
+  browser. A fresh launch on isolated ports 18021/15183 started both separate
+  PowerShell terminals; repeated launch retained the same service process IDs.
+  These test ports avoided interrupting the existing application.
+- A real browser upload with consent produced three parameters, range
+  visualizations, a live Groq explanation, doctor questions, and valid citations.
+  The external quotation and URL matched an actual Chroma document. No browser
+  JavaScript errors occurred. The fresh-launch UI also passed local-only analysis.
+- An isolated backend pointed at an unreachable provider returned HTTP 200 with
+  `explanation.mode=fallback`, all three original comparisons, a warning, and no
+  invented external citations. The existing `external_llm_used` flag records an
+  attempted request; use `explanation.mode=llm_assisted` to identify successful
+  validated explanations.
+- The knowledge base contained 43 chunks; configured Groq and English OCR checks
+  passed without printing credentials. Occupied-port rejection passed under
+  Windows PowerShell 5.1. The existing Python suite passed **197 tests** and
+  the frontend suite passed **25 tests**.
+
+Readiness checks establish local service availability, not a guarantee of future
+Groq availability. Rehearse with internet access before the viva. This desktop
+runner required permission for Windows loopback sockets; no firewall, antivirus,
+execution-policy, or application-control settings were changed.
+
 ## Application Screenshots
 
 Actual captures of the running CoreCare frontend and FastAPI backend using the
