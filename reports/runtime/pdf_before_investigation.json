@@ -1,0 +1,182 @@
+{
+  "local_sha256": "0ba6461c81cfe3884b4a33926b6b6fb34bc04aa749987d905da00e6f7d03b645",
+  "local_size": 956,
+  "testclient": {
+    "status": 200,
+    "pipeline_sha256": "0ba6461c81cfe3884b4a33926b6b6fb34bc04aa749987d905da00e6f7d03b645",
+    "same_bytes": true,
+    "body": {
+      "agent": "medical_report",
+      "status": "partial",
+      "report_type": "CBC",
+      "metadata": {
+        "page_count": 1,
+        "extracted_pages": [
+          1
+        ]
+      },
+      "tests": [
+        {
+          "name": "Hemoglobin",
+          "original_label": "Hemoglobin",
+          "value": "10.0",
+          "unit": "g/dL",
+          "reference_range": "12.0-16.0 g/dL",
+          "reported_flag": null,
+          "source_page": 1,
+          "source_type": "record",
+          "uncertain": false,
+          "warnings": [],
+          "status": "below_range"
+        },
+        {
+          "name": "White Blood Cell Count",
+          "original_label": "WBC",
+          "value": "12000",
+          "unit": "cells/uL",
+          "reference_range": "4000-11000 cells/uL",
+          "reported_flag": null,
+          "source_page": 1,
+          "source_type": "record",
+          "uncertain": false,
+          "warnings": [],
+          "status": "above_range"
+        },
+        {
+          "name": "Platelets",
+          "original_label": "Platelet Count",
+          "value": "250000",
+          "unit": "cells/uL",
+          "reference_range": "150000-450000 cells/uL",
+          "reported_flag": null,
+          "source_page": 1,
+          "source_type": "record",
+          "uncertain": false,
+          "warnings": [],
+          "status": "within_range"
+        }
+      ],
+      "summary": "Hemoglobin: 10.0 g/dL; report range: 12.0-16.0 g/dL; below the stated range [1].\nWhite Blood Cell Count: 12000 cells/uL; report range: 4000-11000 cells/uL; above the stated range [1].\nPlatelets: 250000 cells/uL; report range: 150000-450000 cells/uL; within the stated range [1].\nOnly supported, readable laboratory rows are analyzed. Verify the results against the original report.\nValues outside a stated range are not a diagnosis. Values within range do not guarantee good health.\nIf you currently have severe symptoms or the report is flagged critical, seek urgent professional assessment; for an emergency contact local emergency services. Verify results with a clinician and the original report.\nDiscuss with a healthcare professional: Do any of these results need repeat testing? Could my current medicines or recent illness affect these results? How do these results relate to my symptoms and previous tests?",
+      "warnings": [
+        "External LLM consent absent: no report data was sent to Groq."
+      ],
+      "sources": [
+        {
+          "type": "record",
+          "title": "Uploaded report, page 1",
+          "url": null,
+          "snippet": null,
+          "score": null
+        }
+      ],
+      "disclaimer": "This is AI-generated decision support for research and education. It is not a diagnosis or a prescription. Always consult a qualified clinician for medical advice.",
+      "external_llm_used": false
+    }
+  },
+  "server_title": "CoreCare",
+  "existing_http": {
+    "status": 200,
+    "request_file_sha256": "0ba6461c81cfe3884b4a33926b6b6fb34bc04aa749987d905da00e6f7d03b645",
+    "body": {
+      "agent": "medical_report",
+      "status": "partial",
+      "report_type": "CBC",
+      "metadata": {
+        "page_count": 1,
+        "extracted_pages": [
+          1
+        ]
+      },
+      "tests": [
+        {
+          "name": "Hemoglobin",
+          "original_label": "Hemoglobin",
+          "value": "10.0",
+          "unit": "g/dL",
+          "reference_range": "12.0-16.0 g/dL",
+          "reported_flag": null,
+          "source_page": 1,
+          "source_type": "record",
+          "uncertain": false,
+          "warnings": [],
+          "status": "below_range"
+        },
+        {
+          "name": "White Blood Cell Count",
+          "original_label": "WBC",
+          "value": "12000",
+          "unit": "cells/uL",
+          "reference_range": "4000-11000 cells/uL",
+          "reported_flag": null,
+          "source_page": 1,
+          "source_type": "record",
+          "uncertain": false,
+          "warnings": [],
+          "status": "above_range"
+        },
+        {
+          "name": "Platelets",
+          "original_label": "Platelet Count",
+          "value": "250000",
+          "unit": "cells/uL",
+          "reference_range": "150000-450000 cells/uL",
+          "reported_flag": null,
+          "source_page": 1,
+          "source_type": "record",
+          "uncertain": false,
+          "warnings": [],
+          "status": "within_range"
+        }
+      ],
+      "summary": "Hemoglobin: 10.0 g/dL; report range: 12.0-16.0 g/dL; below the stated range [1].\nWhite Blood Cell Count: 12000 cells/uL; report range: 4000-11000 cells/uL; above the stated range [1].\nPlatelets: 250000 cells/uL; report range: 150000-450000 cells/uL; within the stated range [1].\nOnly supported, readable laboratory rows are analyzed. Verify the results against the original report.\nValues outside a stated range are not a diagnosis. Values within range do not guarantee good health.\nIf you currently have severe symptoms or the report is flagged critical, seek urgent professional assessment; for an emergency contact local emergency services. Verify results with a clinician and the original report.\nDiscuss with a healthcare professional: Do any of these results need repeat testing? Could my current medicines or recent illness affect these results? How do these results relate to my symptoms and previous tests?",
+      "warnings": [
+        "External LLM consent absent: no report data was sent to Groq."
+      ],
+      "sources": [
+        {
+          "type": "record",
+          "title": "Uploaded report, page 1",
+          "url": null,
+          "snippet": null,
+          "score": null
+        }
+      ],
+      "disclaimer": "This is AI-generated decision support for research and education. It is not a diagnosis or a prescription. Always consult a qualified clinician for medical advice.",
+      "external_llm_used": false
+    }
+  },
+  "server_processes": [
+    {
+      "exe": "C:\\Users\\Aanya Aggarwal\\Downloads\\major_project\\.venv\\Scripts\\python.exe",
+      "create_time": 1795517125.7405095,
+      "ppid": 67592,
+      "pid": 18808,
+      "cwd": "C:\\Users\\Aanya Aggarwal\\Downloads\\major_project",
+      "cmdline": [
+        "C:\\Users\\Aanya Aggarwal\\Downloads\\major_project\\.venv\\Scripts\\python.exe",
+        "-m",
+        "uvicorn",
+        "backend.main:app",
+        "--reload",
+        "--port",
+        "8001"
+      ]
+    },
+    {
+      "exe": "C:\\Users\\Aanya Aggarwal\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+      "create_time": 1795517125.758736,
+      "ppid": 18808,
+      "pid": 37616,
+      "cwd": "C:\\Users\\Aanya Aggarwal\\Downloads\\major_project",
+      "cmdline": [
+        "C:\\Users\\Aanya Aggarwal\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+        "-m",
+        "uvicorn",
+        "backend.main:app",
+        "--reload",
+        "--port",
+        "8001"
+      ]
+    }
+  ]
+}

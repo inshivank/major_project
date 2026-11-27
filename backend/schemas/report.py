@@ -21,6 +21,7 @@ class Extraction(BaseModel):
 
 
 class Measurement(BaseModel):
+    parameter_id: str | None = None
     name: str
     original_label: str
     value: str | None = None
@@ -40,6 +41,30 @@ class ReportMetadata(BaseModel):
     # Patient identifiers and filenames are deliberately not retained.
 
 
+class CitedExplanation(BaseModel):
+    text: str
+    citation_ids: list[int] = Field(default_factory=list)
+
+
+class ParameterExplanation(BaseModel):
+    parameter_id: str
+    what_it_measures: list[CitedExplanation] = Field(default_factory=list)
+    range_explanation: str
+    citation_ids: list[int] = Field(default_factory=list)
+
+
+class StructuredExplanation(BaseModel):
+    mode: Literal["local", "llm_assisted", "fallback"]
+    overall_summary: str
+    parameter_explanations: list[ParameterExplanation]
+    educational_context: list[CitedExplanation] = Field(default_factory=list)
+    doctor_discussion_questions: list[str]
+    limitations: list[str]
+    medical_disclaimer: str
+    urgent_care_guidance: str
+    citation_ids: list[int]
+
+
 class ReportResponse(BaseModel):
     agent: Literal["medical_report"] = "medical_report"
     status: Literal["completed", "partial"]
@@ -51,3 +76,4 @@ class ReportResponse(BaseModel):
     sources: list[Source] = Field(default_factory=list)
     disclaimer: str
     external_llm_used: bool = False
+    explanation: StructuredExplanation | None = None

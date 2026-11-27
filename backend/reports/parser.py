@@ -90,6 +90,7 @@ def parse(extraction: Extraction) -> tuple[list[Measurement], str, list[str]]:
                         flag = end_flag[1]
                         reference = reference[: end_flag.start()].rstrip()
                 test = Measurement(
+                    parameter_id=f"parameter-{len(tests)+1}",
                     name=name,
                     original_label=label,
                     value=values.get("value"),

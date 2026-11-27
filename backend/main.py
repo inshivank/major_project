@@ -45,6 +45,11 @@ async def public_config():
         "llm_model": settings.llm_model,
         "llm_configured": bool(settings.groq_api_key),
         "retrieval_top_k": settings.retrieval_top_k,
+        "report_upload": {
+            "max_bytes": settings.report_max_upload_bytes,
+            "formats": ["pdf", "png", "jpg", "jpeg"],
+            "timeout_seconds": settings.report_upload_timeout_seconds + settings.report_processing_timeout_seconds,
+        },
     }
 
 

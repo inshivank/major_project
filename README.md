@@ -366,3 +366,194 @@ fix; its historical Swagger rejection was not reproducible. An independent harml
 metadata false positive was reproduced and fixed with identical-byte evidence.
 See ignored `reports/runtime/week4_pdf_fix_verification.md` for complete results,
 file lists, response examples and exact manual Swagger instructions.
+
+
+## Floating Report Analyzer frontend
+
+This repository had no existing frontend, dashboard or authentication client. The new
+`frontend/` app provides a small host workspace and a reusable React/TypeScript
+`ReportAnalyzer` component styled with Tailwind and custom healthcare theme CSS.
+No existing dashboard was replaced. The report agent and upload contract are unchanged.
+`GET /config` now additionally returns public `report_upload` limits/formats/time budget.
+
+Run in separate project-root terminals:
+
+```powershell
+.venv\Scripts\python -m uvicorn backend.main:app --host 127.0.0.1 --port 8001
+npm.cmd ci --prefix frontend
+npm.cmd run dev --prefix frontend
+```
+
+Open `http://127.0.0.1:5173`. The Vite proxy forwards `/config` and `/reports` to
+`http://127.0.0.1:8001`. Override its target with `CORECARE_BACKEND_URL` in the terminal
+if needed. `frontend/.env.example` documents optional `VITE_API_BASE_URL` for a
+same-origin deployment prefix. Production hosting must serve `frontend/dist` and
+reverse-proxy those API paths to FastAPI; the dev proxy is not in the static build.
+Do not place API keys in frontend environment variables. No CORS relaxation was added.
+
+Click **Report Analyzer**, browse or drop `tests/fixtures/reports/cbc_text.pdf`, and
+select **Analyze Report**. With the checkbox unchecked, results are local and may be
+partial because external education is absent. Explicitly checking the box sends
+`external_llm_consent=true` alongside the `file` multipart field to the existing
+`POST /reports/analyze`. It permits the backend's Groq workflow. Results map backend
+`tests`, `summary`, `warnings`, `sources` (numbered in their existing order),
+`external_llm_used`, `status`, and `disclaimer` without invented clinical classifications.
+The API service validates response shapes and safely handles errors/links.
+
+Try minimize/close and reopen: the in-memory state survives, including in-flight work.
+Use **Clear current report and results** or **Analyze another report** to remove it.
+Leaving the page clears it. No report data is written to browser storage or logs;
+no object URLs are created. In an authenticated host, render
+`<ReportAnalyzer sessionKey={user?.id ?? "logged-out"} />` so identity/logout changes
+abort the request and clear sensitive state. There is no existing login mechanism in
+this repository to integrate. Client abort does not guarantee cancellation of work
+already accepted by the backend. The panel uses an indeterminate loading state,
+not invented stage progress. CSS respects reduced motion and mobile safe areas.
+
+Verification:
+
+```powershell
+npm.cmd run lint --prefix frontend
+npm.cmd run typecheck --prefix frontend
+npm.cmd test --prefix frontend
+npm.cmd run build --prefix frontend
+npm.cmd run smoke --prefix frontend
+.venv\Scripts\python -m pytest -q
+```
+
+Frontend: 11 tests passed; lint, TypeScript and production build passed. Backend: all
+189 tests passed. The Chrome smoke test starts/stops temporary servers on 18011/15174,
+uploads a real synthetic PDF through the UI, checks result rendering and retained
+state, tests a 375px mobile viewport, keyboard focus and empty browser storage.
+It requires installed Chrome; screenshots are saved to `reports/runtime/ui/`.
+No live external AI call is made by this smoke test. AI-result rendering and consent
+request construction are covered by offline tests; the backend's prior live workflow
+is documented separately. No commits or pushes are performed.
+
+Created frontend files: `package.json`, `package-lock.json`, `tsconfig.json`,
+`vite.config.ts`, `eslint.config.js`, `index.html`, `.env.example`, `src/main.tsx`,
+`src/style.css`, `src/ReportAnalyzer.tsx`, `src/api.ts`, `src/setup.ts`,
+`src/ReportAnalyzer.test.tsx`, and `scripts/smoke.mjs`. Modified backend file:
+`backend/main.py` (public limits only). `.gitignore` excludes frontend dependencies,
+build output and TypeScript cache files.
+
+
+### Medical Report Analysis window modes
+
+The floating launcher and panel are now named **Medical Report Analysis**. Header
+controls are Minimize, Maximize/Restore, Close. Display state (`open`, `maximized`)
+is independent of file/consent/results/request state: minimize or close preserves
+that session and reopening returns to the previous size. Maximize never submits
+another request. Escape restores a maximized window; a second Escape hides the
+normal panel. Only explicit reset or identity changes clear report data.
+
+Expanded mode uses a 94% centered viewport with a backdrop, background scroll lock,
+inert background content and modal semantics. Results split into parameter overview/
+measurements and explanations/warnings/citations on desktop; screens up to 800px
+use one column. Mobile fills the available screen. Header/privacy footer stay fixed
+while the body scrolls. All controls have labels/tooltips; reduced motion is respected.
+Inline SVG window controls match the existing icon style; no icon dependency was added.
+
+Manual verification: run the existing backend/frontend commands above, open the
+launcher, maximize before uploading, restore, upload a synthetic fixture, then change
+modes while loading or after results arrive. Minimize/reopen should retain the previous
+mode and report. Check Escape twice and repeat at a narrow viewport. All 14 frontend
+tests, TypeScript checks, lint and production build passed. The Chrome smoke test
+passed real local upload, expanded two-column results, mode retention, Escape restore,
+scroll locking and mobile bounds; screenshots are in `reports/runtime/ui/`.
+
+This enhancement modifies only `frontend/src/ReportAnalyzer.tsx`, `src/style.css`,
+`src/main.tsx`, `src/ReportAnalyzer.test.tsx`, `scripts/smoke.mjs` and this README.
+It changes no backend API, consent, extraction, RAG or authentication functionality.
+
+
+### Structured medical explanations
+
+The old wall of text was primarily assembled locally: authoritative measurements,
+validated Groq-selected quotations, repeated educational prefixes, limitations and
+questions were concatenated into `summary`. It was not free-form LLM prose. The
+legacy field and its citation numbering remain unchanged for existing clients.
+
+The response now additionally contains `explanation` and each measurement has a
+stable response-scoped `parameter_id` (for example `parameter-1`). The structured
+object includes `mode` (`local`, `fallback`, `llm_assisted`), `overall_summary`,
+`parameter_explanations`, `educational_context`, `doctor_discussion_questions`,
+`limitations`, `medical_disclaimer`, `urgent_care_guidance`, and `citation_ids`.
+Each parameter explanation links by ID and contains `what_it_measures` (verified
+cited sentences), a deterministic `range_explanation`, and record citation IDs.
+No authoritative values or classifications are generated by the model.
+
+The prompt still requests the strict existing JSON selection schema (`excerpts`
+with integer `source` and verbatim `quote`, plus validated `question_ids`). It now
+prioritizes outside-range tests, simple concise sentences, what tests measure and
+no repetition. Numeric IDs are required; numerical clinical claims, altered quotes,
+unsupported sources, prescriptions and diagnoses remain rejected. The same Groq
+service handles JSON repair and typed failures. We do not rely on provider-specific
+structured-output support or allow ungrounded paraphrases merely for presentation.
+Pydantic validates the additive schema; exact source validation precedes its assembly.
+
+The structured builder associates unambiguous test-label matches with their cards;
+unassigned verified sentences appear once under About These Tests. Missing verified
+context is shown explicitly, never invented. Without consent there are no report RAG
+or LLM calls: only local measurements, range meanings, standard questions and safety
+information are structured. Provider/validation failure uses the same schema with
+`mode=fallback`, preserves values/statuses and clearly labels unavailable context.
+`external_llm_used` continues to indicate a provider attempt, so the structured mode
+is what identifies validated LLM-assisted content versus fallback content.
+
+The new UI shows Understanding Your Report and statistics, abnormal-first parameter
+cards, Questions to Discuss With Your Doctor, clickable source references, Important
+Medical Information and separate conditional urgent-care guidance. Local safety text
+is consolidated instead of repeating the legacy summary. Maximize uses two columns;
+normal/mobile use the same single-column content. Old servers without `explanation`
+retain the legacy renderer. No browser storage or window-state behavior was changed.
+
+Reference indicators are presentation only: marker/boundary percentages are calculated
+from the extracted finite numeric value and compatible two-sided range. The indicator
+never determines status. Missing/mismatched units, one-sided/qualitative/reversed or
+missing ranges, uncertainty and indeterminate statuses use text. Colors describe
+range position, not clinical severity. Every card retains the original value/unit,
+reference range and source page.
+
+Files for this enhancement:
+
+- `backend/schemas/report.py`, `backend/reports/parser.py`: additive typed structure and IDs.
+- `backend/reports/explanation.py`, `backend/reports/structured_explanation.py`,
+  `backend/agents/report_agent.py`: validated selection, structured assembly, fallback.
+- `tests/test_structured_explanation.py`: eight new consent/safety/schema/fallback cases.
+- `frontend/src/api.ts`, `src/ReportAnalyzer.tsx`, `src/ReportPresentation.tsx`,
+  `src/rangeGeometry.ts`, `src/style.css`: typed presentation and range calculations.
+- `frontend/src/ReportPresentation.test.tsx`: eleven new presentation/math/citation cases.
+- `frontend/scripts/smoke.mjs`: real desktop/mobile structured-result verification.
+- `README.md`: this implementation and usage description.
+
+Verification on 2026-11-27: 197 backend tests and 25 frontend tests passed. TypeScript,
+lint, production build and real Chrome smoke checks passed. Existing Zod bundle
+annotation warnings are harmless. The synthetic live verifier also returned
+`live_groq=verified` and `overall=verified_requested_checks`; the additive explanation
+was LLM-assisted with IDs matching the actual tests and valid source references.
+A sanitized example is in `reports/runtime/structured_explanation_example.json`.
+
+```powershell
+.venv\Scripts\python -m pytest -q
+npm.cmd test --prefix frontend
+npm.cmd run typecheck --prefix frontend
+npm.cmd run lint --prefix frontend
+npm.cmd run build --prefix frontend
+npm.cmd run smoke --prefix frontend
+.venv\Scripts\python -m scripts.verify_report_runtime --consent
+```
+
+To inspect manually, run the existing backend/frontend startup commands, open Medical
+Report Analysis, upload a synthetic CBC fixture and analyze with consent off. Review
+local labels, cards, range indicators, questions and safety information. Reset and
+explicitly opt in to test sourced LLM assistance. Click a compact citation to expand
+its actual source. Maximize, restore and minimize/reopen; content must remain unchanged.
+Repeat on a narrow screen and with a scanned fixture, which must stay indeterminate.
+
+Limitations: educational sentences remain conservative exact excerpts, so unavailable
+or ambiguous test-specific context is explicitly absent; the system does not generate
+free-form diagnoses or replace clinician interpretation. Parameter IDs are stable
+within the analyzed report, not persistent identifiers across future uploads. Existing
+OCR, document-layout, deployment-access and provider-availability limits remain.
+No unrelated agent, report-security rule or API endpoint was rebuilt.

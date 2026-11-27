@@ -1,0 +1,72 @@
+{
+  "agent": "medical_report",
+  "status": "completed",
+  "report_type": "CBC",
+  "metadata": {
+    "page_count": 1,
+    "extracted_pages": [
+      1
+    ]
+  },
+  "tests": [
+    {
+      "name": "Hemoglobin",
+      "original_label": "Hemoglobin",
+      "value": "10.0",
+      "unit": "g/dL",
+      "reference_range": "12.0-16.0 g/dL",
+      "reported_flag": null,
+      "source_page": 1,
+      "source_type": "record",
+      "uncertain": false,
+      "warnings": [],
+      "status": "below_range"
+    },
+    {
+      "name": "White Blood Cell Count",
+      "original_label": "WBC",
+      "value": "12000",
+      "unit": "cells/uL",
+      "reference_range": "4000-11000 cells/uL",
+      "reported_flag": null,
+      "source_page": 1,
+      "source_type": "record",
+      "uncertain": false,
+      "warnings": [],
+      "status": "above_range"
+    },
+    {
+      "name": "Platelets",
+      "original_label": "Platelet Count",
+      "value": "250000",
+      "unit": "cells/uL",
+      "reference_range": "150000-450000 cells/uL",
+      "reported_flag": null,
+      "source_page": 1,
+      "source_type": "record",
+      "uncertain": false,
+      "warnings": [],
+      "status": "within_range"
+    }
+  ],
+  "summary": "Hemoglobin: 10.0 g/dL; report range: 12.0-16.0 g/dL; below the stated range [1].\nWhite Blood Cell Count: 12000 cells/uL; report range: 4000-11000 cells/uL; above the stated range [1].\nPlatelets: 250000 cells/uL; report range: 150000-450000 cells/uL; within the stated range [1].\nOnly supported, readable laboratory rows are analyzed. Verify the results against the original report.\nValues outside a stated range are not a diagnosis. Values within range do not guarantee good health.\nEducational context: A complete blood count measures different types of blood cells. [2]\nEducational context: Hemoglobin is a protein in red blood cells that carries oxygen. [2]\nEducational context: White blood cells help the body fight infection. [2]\nEducational context: Platelets help blood form clots. [2]\nEducational context: A CBC result needs interpretation alongside other information about the person. [2]\nIf you currently have severe symptoms or the report is flagged critical, seek urgent professional assessment; for an emergency contact local emergency services. Verify results with a clinician and the original report.\nDiscuss with a healthcare professional: Do any of these results need repeat testing? Could my current medicines or recent illness affect these results? How do these results relate to my symptoms and previous tests?",
+  "warnings": [],
+  "sources": [
+    {
+      "type": "record",
+      "title": "Uploaded report, page 1",
+      "url": null,
+      "snippet": null,
+      "score": null
+    },
+    {
+      "type": "reference",
+      "title": "Complete blood count: what the measurements describe",
+      "url": "https://medlineplus.gov/lab-tests/complete-blood-count-cbc/",
+      "snippet": "A complete blood count measures different types of blood cells.",
+      "score": 0.506
+    }
+  ],
+  "disclaimer": "This is AI-generated decision support for research and education. It is not a diagnosis or a prescription. Always consult a qualified clinician for medical advice.",
+  "external_llm_used": true
+}

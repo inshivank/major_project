@@ -1,0 +1,25 @@
+{
+  "excerpts": [
+    {
+      "source": 2,
+      "quote": "A complete blood count measures different types of blood cells."
+    },
+    {
+      "source": 2,
+      "quote": "Hemoglobin is a protein in red blood cells that carries oxygen."
+    },
+    {
+      "source": 2,
+      "quote": "White blood cells help the body fight infection."
+    },
+    {
+      "source": 2,
+      "quote": "Platelets help blood form clots."
+    }
+  ],
+  "question_ids": [
+    0,
+    1,
+    2
+  ]
+}

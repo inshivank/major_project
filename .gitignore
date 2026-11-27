@@ -37,3 +37,8 @@ Thumbs.db
 
 # Local OCR runtime and package-manager cache
 .runtime/
+
+# Frontend build artifacts
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo

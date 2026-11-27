@@ -8,11 +8,13 @@ import json
 import re
 import time
 from collections.abc import Sequence
+from dataclasses import dataclass
+from backend.reports.structured_explanation import build_explanation
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from backend.llm.llm_service import LLMError
 from backend.config.settings import settings
 from backend.schemas.chat import Source, SourceType
-from backend.schemas.report import Measurement
+from backend.schemas.report import Measurement, StructuredExplanation
 
 QUESTIONS = [
     "Do any of these results need repeat testing?",
@@ -37,6 +39,19 @@ class ExplanationSelection(BaseModel):
     question_ids: list[int] = Field(max_length=3)
 
 
+@dataclass
+class ExplanationResult:
+    summary: str
+    sources: list[Source]
+    warnings: list[str]
+    used: bool
+    explanation: StructuredExplanation
+
+    def __iter__(self):
+        # Preserve existing internal four-value unpacking as well as the public summary.
+        return iter((self.summary, self.sources, self.warnings, self.used))
+
+
 class ReportExplainer:
     def __init__(self, retriever=None, llm=None, config=settings):
         self.config = config
@@ -48,7 +63,7 @@ class ReportExplainer:
         tests: Sequence[Measurement],
         consent: bool = False,
         deadline: float | None = None,
-    ) -> tuple[str, list[Source], list[str], bool]:
+    ) -> ExplanationResult:
         pages = sorted({test.source_page for test in tests})
         sources = [
             Source(type=SourceType.RECORD, title=f"Uploaded report, page {page}")
@@ -72,6 +87,8 @@ class ReportExplainer:
         summary = "\n".join(facts) or "No supported measurements were extracted."
         summary += "\nOnly supported, readable laboratory rows are analyzed. Verify the results against the original report.\nValues outside a stated range are not a diagnosis. Values within range do not guarantee good health."
         warnings, used = [], False
+        validated_quotes = []
+        selected_questions = QUESTIONS
         if not consent:
             warnings.append(
                 "External LLM consent absent: no report data was sent to Groq."
@@ -148,7 +165,7 @@ class ReportExplainer:
                         'Return a JSON object with keys "excerpts" and "question_ids". '
                         'Each excerpt has "source" (the exact integer evidence source ID) and "quote" '
                         "(a string copied verbatim from its allowed_quotes list). "
-                        "Select one to five general plain-language sentences relevant to the supplied test names. "
+                        "Select concise, simple-English sentences explaining what each test measures. Prioritize tests outside their stated range. Avoid repetition and complex terminology. Never calculate, reclassify or restate measurements. Your role is an educational assistant, not a doctor. "
                         "When relevant allowed_quotes exist, include at least one. "
                         "Use question_ids from 0 to 2. Numeric IDs are required; the prohibition on numbers "
                         "applies only to quote text, not to IDs. Do not put bracket citations in quote text. "
@@ -193,6 +210,9 @@ class ReportExplainer:
                         for i in selection.question_ids
                     ):
                         raise ValueError("Invalid question")
+                    selected_questions = [
+                        QUESTIONS[i] for i in dict.fromkeys(selection.question_ids)
+                    ] or QUESTIONS
                     # Stable source order; remap only accepted sources, avoiding unused citations.
                     mapped = {}
                     for index, quote in accepted:
@@ -208,6 +228,8 @@ class ReportExplainer:
                                 )
                             )
                             mapped[index] = len(sources)
+                        if (quote, mapped[index]) not in validated_quotes:
+                            validated_quotes.append((quote, mapped[index]))
                         summary += f"\nEducational context: {quote} [{mapped[index]}]"
                     if not accepted:
                         warnings.append(
@@ -245,4 +267,7 @@ class ReportExplainer:
             "\nIf you currently have severe symptoms or the report is flagged critical, seek urgent professional assessment; for an emergency contact local emergency services. Verify results with a clinician and the original report.\nDiscuss with a healthcare professional: "
             + " ".join(QUESTIONS)
         )
-        return summary, sources, warnings, used
+        structured = build_explanation(
+            tests, sources, validated_quotes, selected_questions, warnings, consent
+        )
+        return ExplanationResult(summary, sources, warnings, used, structured)

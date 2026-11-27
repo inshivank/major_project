@@ -1,0 +1,14 @@
+{
+  "segments": [
+    {
+      "page": 1,
+      "text": "SYNTHETIC CBC - NOT A PATIENT RECORD\nHemoglobin 10.2 g/dL 12-16\n\nWBC 13.0 K/uL 4-11\n\nPlatelets 250 K/uL 150-400",
+      "method": "ocr",
+      "uncertain": true
+    }
+  ],
+  "page_count": 1,
+  "warnings": [
+    "Page 1: OCR text requires verification."
+  ]
+}

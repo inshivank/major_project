@@ -1,0 +1,11 @@
+{
+  "fixture": "tests\\fixtures\\reports\\safe_keyword_metadata.pdf",
+  "sha256": "dea3b03ab3f7411065653ee382016cfe99b0986342a57c221536d497c76ae41f",
+  "status": 422,
+  "response": {
+    "detail": {
+      "code": "unsafe_pdf",
+      "message": "PDF attachments and active content are not supported."
+    }
+  }
+}

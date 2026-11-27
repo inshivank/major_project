@@ -1,0 +1,125 @@
+{
+  "agent": "medical_report",
+  "status": "partial",
+  "report_type": "CBC",
+  "metadata": {
+    "page_count": 1,
+    "extracted_pages": [
+      1
+    ]
+  },
+  "tests": [
+    {
+      "parameter_id": "parameter-1",
+      "name": "Hemoglobin",
+      "original_label": "Hemoglobin",
+      "value": "10.2",
+      "unit": "g/dL",
+      "reference_range": "12-16",
+      "reported_flag": null,
+      "source_page": 1,
+      "source_type": "record",
+      "uncertain": true,
+      "warnings": [
+        "Extraction uncertain; verify against the original report."
+      ],
+      "status": "indeterminate"
+    },
+    {
+      "parameter_id": "parameter-2",
+      "name": "White Blood Cell Count",
+      "original_label": "WBC",
+      "value": "13.0",
+      "unit": "K/uL",
+      "reference_range": "4-11",
+      "reported_flag": null,
+      "source_page": 1,
+      "source_type": "record",
+      "uncertain": true,
+      "warnings": [
+        "Extraction uncertain; verify against the original report."
+      ],
+      "status": "indeterminate"
+    },
+    {
+      "parameter_id": "parameter-3",
+      "name": "Platelets",
+      "original_label": "Platelets",
+      "value": "250",
+      "unit": "K/uL",
+      "reference_range": "150-400",
+      "reported_flag": null,
+      "source_page": 1,
+      "source_type": "record",
+      "uncertain": true,
+      "warnings": [
+        "Extraction uncertain; verify against the original report."
+      ],
+      "status": "indeterminate"
+    }
+  ],
+  "summary": "Hemoglobin: 10.2 g/dL; report range: 12-16; comparison could not be performed safely [1].\nWhite Blood Cell Count: 13.0 K/uL; report range: 4-11; comparison could not be performed safely [1].\nPlatelets: 250 K/uL; report range: 150-400; comparison could not be performed safely [1].\nOnly supported, readable laboratory rows are analyzed. Verify the results against the original report.\nValues outside a stated range are not a diagnosis. Values within range do not guarantee good health.\nIf you currently have severe symptoms or the report is flagged critical, seek urgent professional assessment; for an emergency contact local emergency services. Verify results with a clinician and the original report.\nDiscuss with a healthcare professional: Do any of these results need repeat testing? Could my current medicines or recent illness affect these results? How do these results relate to my symptoms and previous tests?",
+  "warnings": [
+    "OCR text requires verification against the original document.",
+    "External LLM consent absent: no report data was sent to Groq."
+  ],
+  "sources": [
+    {
+      "type": "record",
+      "title": "Uploaded report, page 1",
+      "url": null,
+      "snippet": null,
+      "score": null
+    }
+  ],
+  "disclaimer": "This is AI-generated decision support for research and education. It is not a diagnosis or a prescription. Always consult a qualified clinician for medical advice.",
+  "external_llm_used": false,
+  "explanation": {
+    "mode": "local",
+    "overall_summary": "Your report contains 3 analyzed parameters: 0 within the stated range, 0 outside it, and 3 indeterminate. Discuss results outside their stated range with your healthcare professional.",
+    "parameter_explanations": [
+      {
+        "parameter_id": "parameter-1",
+        "what_it_measures": [],
+        "range_explanation": "This result cannot be compared safely. Its value, unit, range or extraction may need verification. A healthcare professional can interpret it alongside your symptoms and medical history.",
+        "citation_ids": [
+          1
+        ]
+      },
+      {
+        "parameter_id": "parameter-2",
+        "what_it_measures": [],
+        "range_explanation": "This result cannot be compared safely. Its value, unit, range or extraction may need verification. A healthcare professional can interpret it alongside your symptoms and medical history.",
+        "citation_ids": [
+          1
+        ]
+      },
+      {
+        "parameter_id": "parameter-3",
+        "what_it_measures": [],
+        "range_explanation": "This result cannot be compared safely. Its value, unit, range or extraction may need verification. A healthcare professional can interpret it alongside your symptoms and medical history.",
+        "citation_ids": [
+          1
+        ]
+      }
+    ],
+    "educational_context": [],
+    "doctor_discussion_questions": [
+      "Do any of these results need repeat testing?",
+      "Could my current medicines or recent illness affect these results?",
+      "How do these results relate to my symptoms and previous tests?"
+    ],
+    "limitations": [
+      "Values outside a stated range do not necessarily indicate disease.",
+      "Values within range do not guarantee good health.",
+      "Only supported and readable laboratory results are analyzed.",
+      "Verify results against the original report and review them with a healthcare professional.",
+      "External LLM consent absent: no report data was sent to Groq."
+    ],
+    "medical_disclaimer": "This is AI-generated decision support for research and education. It is not a diagnosis or a prescription. Always consult a qualified clinician for medical advice.",
+    "urgent_care_guidance": "If you currently have severe symptoms or the report is flagged critical, seek urgent professional assessment. For an emergency, contact local emergency services. A range flag alone does not establish an emergency.",
+    "citation_ids": [
+      1
+    ]
+  }
+}

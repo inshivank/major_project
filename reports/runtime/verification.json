@@ -1,0 +1,73 @@
+{
+  "synthetic_only": true,
+  "ocr_version": "5.4.0.20240606",
+  "groq_key_configured": true,
+  "explicit_consent": true,
+  "uploads": {
+    "png": {
+      "http_status": 200,
+      "status": "partial",
+      "tests": 3,
+      "range_statuses": [
+        "indeterminate",
+        "indeterminate",
+        "indeterminate"
+      ],
+      "external_llm_used": false,
+      "sources": 1,
+      "warnings": [
+        "OCR text requires verification against the original document.",
+        "External LLM consent absent: no report data was sent to Groq."
+      ]
+    },
+    "scanned_pdf": {
+      "http_status": 200,
+      "status": "partial",
+      "tests": 3,
+      "range_statuses": [
+        "indeterminate",
+        "indeterminate",
+        "indeterminate"
+      ],
+      "external_llm_used": false,
+      "sources": 1,
+      "warnings": [
+        "Page 1: OCR text requires verification.",
+        "External LLM consent absent: no report data was sent to Groq."
+      ]
+    },
+    "text_pdf": {
+      "http_status": 200,
+      "status": "completed",
+      "tests": 3,
+      "range_statuses": [
+        "below_range",
+        "above_range",
+        "within_range"
+      ],
+      "external_llm_used": true,
+      "sources": 2,
+      "warnings": []
+    }
+  },
+  "retrieval": {
+    "collection": "corecare_medical",
+    "count": 43,
+    "sources": [
+      {
+        "title": "Complete blood count: what the measurements describe",
+        "url": "https://medlineplus.gov/lab-tests/complete-blood-count-cbc/",
+        "score": 0.7056,
+        "text": "A complete blood count measures different types of blood cells. Hemoglobin is a protein in red blood cells that carries oxygen. White blood cells help the body fight infection. Platelets help blood form clots. Hematocrit describes the proportion of blood made up of red blood cells. A CBC result needs interpretation alongside other information about the person."
+      },
+      {
+        "title": "Type 2 diabetes: overview",
+        "url": "https://www.who.int/news-room/fact-sheets/detail/diabetes",
+        "score": 0.3732,
+        "text": "Diagnosis is based on blood tests: a fasting glucose, an oral glucose tolerance test, or glycated haemoglobin (HbA1c). A clinician confirms the diagnosis and usually repeats the test unless the result is unambiguous.\n\nManagement combines healthy eating, regular physical activity, weight reduction where appropriate, and medicines. Metformin is commonly the first medicine. Some people eventually need insulin or other injectable therapies. Regular monitoring of blood pressure, kidney function, cholesterol, and eyes and feet helps prevent complications."
+      }
+    ]
+  },
+  "live_groq": "verified",
+  "overall": "verified_requested_checks"
+}

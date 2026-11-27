@@ -48,9 +48,11 @@ class ReportAgent:
         extraction = self.extractor.extract(data)
         tests, report_type, warnings = parse(extraction)
         warnings = [*extraction.warnings, *warnings]
-        summary, sources, explanation_warnings, used = self.explainer.explain(
+        explanation_result = self.explainer.explain(
             tests, consent=consent, deadline=deadline
         )
+        summary, sources, explanation_warnings, used = explanation_result
+        explanation_result.explanation.medical_disclaimer = self.config.disclaimer
         warnings.extend(explanation_warnings)
         partial = bool(
             extraction.warnings
@@ -71,4 +73,5 @@ class ReportAgent:
             warnings=warnings,
             disclaimer=self.config.disclaimer,
             external_llm_used=used,
+            explanation=explanation_result.explanation,
         )

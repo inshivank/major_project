@@ -1,0 +1,62 @@
+{
+  "safe_keyword_metadata.pdf": {
+    "accepted": true
+  },
+  "safe_keyword_text.pdf": {
+    "accepted": true
+  },
+  "safe_name_prefix.pdf": {
+    "accepted": true
+  },
+  "safe_nested_string.pdf": {
+    "accepted": true
+  },
+  "safe_hex_string.pdf": {
+    "accepted": true
+  },
+  "unsafe_attachment.pdf": {
+    "accepted": false,
+    "code": "unsafe_pdf",
+    "message": "PDF attachments and active content are not supported."
+  },
+  "unsafe_javascript.pdf": {
+    "accepted": false,
+    "code": "unsafe_pdf",
+    "message": "PDF active content is not supported."
+  },
+  "unsafe_launch.pdf": {
+    "accepted": false,
+    "code": "unsafe_pdf",
+    "message": "PDF active content is not supported."
+  },
+  "unsafe_automatic.pdf": {
+    "accepted": false,
+    "code": "unsafe_pdf",
+    "message": "PDF active content is not supported."
+  },
+  "unsafe_additional.pdf": {
+    "accepted": false,
+    "code": "unsafe_pdf",
+    "message": "PDF active content is not supported."
+  },
+  "unsafe_rich_media.pdf": {
+    "accepted": false,
+    "code": "unsafe_pdf",
+    "message": "PDF active content is not supported."
+  },
+  "unsafe_embedded_object.pdf": {
+    "accepted": false,
+    "code": "unsafe_pdf",
+    "message": "PDF active content is not supported."
+  },
+  "unsafe_escaped.pdf": {
+    "accepted": false,
+    "code": "unsafe_pdf",
+    "message": "PDF active content is not supported."
+  },
+  "unsafe_compressed.pdf": {
+    "accepted": false,
+    "code": "unsafe_pdf",
+    "message": "PDF active content is not supported."
+  }
+}
