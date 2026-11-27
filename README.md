@@ -9,6 +9,83 @@ research framework.
 > Medical safety notice: CoreCare is a research/educational project, **not** a medical
 > diagnosis system. It is not a substitute for professional medical advice or care.
 
+## Application Screenshots
+
+Actual captures of the running CoreCare frontend and FastAPI backend using the
+synthetic CBC fixture at `tests/fixtures/reports/cbc_text.pdf`. No real patient
+records are shown. The analysis screenshots include a live Groq explanation
+requested with explicit consent, report-derived ranges, and supporting sources.
+Desktop captures are 1920 × 1080; the mobile capture is 390 × 844.
+
+### CoreCare Dashboard
+
+The landing page introduces the report companion and its floating launcher.
+
+<p align="center">
+  <img src="docs/screenshots/dashboard.png" alt="CoreCare landing page with the Medical Report Analysis launcher" width="960">
+</p>
+
+### Report Analyzer and Upload
+
+Open the floating analyzer, then select a PDF or image report. The upload example
+shows the synthetic CBC PDF selected before analysis.
+
+<table align="center">
+  <tr>
+    <th>Floating report analyzer</th>
+    <th>Synthetic report selected</th>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/report-analyzer.png" alt="Medical Report Analysis floating popup with upload controls and optional AI consent" width="480"></td>
+    <td><img src="docs/screenshots/report-upload.png" alt="Report upload interface with the synthetic cbc_text.pdf selected and ready to analyze" width="480"></td>
+  </tr>
+</table>
+
+### Analysis Results
+
+The completed analysis displays measured values, units, the report's reference
+ranges, and comparison statuses. The synthetic report contains three parameters:
+one within its stated range and two outside it.
+
+<p align="center">
+  <img src="docs/screenshots/analysis-results.png" alt="Completed synthetic CBC analysis showing hemoglobin value, reference range, and below-range status" width="960">
+</p>
+
+### Maximized Analysis Workspace
+
+The maximized interface provides more room for parameter cards, the report
+summary, doctor discussion questions, and sources.
+
+<p align="center">
+  <img src="docs/screenshots/maximized-view.png" alt="Maximized Medical Report Analysis workspace with report summary and two-column results" width="960">
+</p>
+
+### AI Explanations and Supporting Sources
+
+An expanded parameter explanation appears alongside doctor discussion questions
+and the actual supporting source returned by the application. Citation links
+connect explanations to the references shown in the interface.
+
+<p align="center">
+  <img src="docs/screenshots/ai-explanations.png" alt="Patient-friendly hemoglobin explanation with citation, doctor discussion questions, and expanded supporting source" width="960">
+</p>
+
+### Responsive Mobile View
+
+The same completed analysis adapts to a narrow mobile viewport with vertically
+stacked content and a scrollable report panel.
+
+<p align="center">
+  <img src="docs/screenshots/mobile-view.png" alt="CoreCare report analysis on a 390-pixel mobile viewport showing summary and hemoglobin result" width="320">
+</p>
+
+To reproduce these captures from the `frontend` directory, run
+`node scripts/capture-screenshots.mjs`. This starts local servers, uses headless
+Chrome through the existing Playwright setup, and makes a live Groq request with
+the synthetic fixture and explicit consent. It requires the existing backend
+configuration, a configured Groq key, corpus, and Chrome installation. Re-running
+the script overwrites these screenshots; generated explanation wording may vary.
+
 ## Current Status (Week 4 — Medical Report Analysis)
 
 The online path works end to end: request routing, Groq LLM service, ChromaDB medical
