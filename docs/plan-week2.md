@@ -55,7 +55,9 @@ Orchestrator -> Router (rules first, LLM fallback)
   |
   +--> PatientAgent  (Groq + RAG)            IMPLEMENTED
   +--> ReportAgent   (stub: not_available)  WEEK 4
-  +--> ClinicalAgent (stub: not_available)  WEEK 3+
+  +--> ClinicalAgent
+  
+  NN (stub: not_available)  WEEK 3+
   |
   v
 Merger -> {answer, sources[], agent, disclaimer, session_id}

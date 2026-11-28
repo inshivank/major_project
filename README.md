@@ -107,10 +107,21 @@ The first run downloads the ChromaDB ONNX embedding model (~80 MB) into
 .venv\Scripts\python -m uvicorn backend.main:app --reload
 ```
 
+Or use the launcher, which starts the server and opens the selected popup:
+
+```powershell
+.venv\Scripts\python run_agents.py
+corecare> agent1
+corecare> agent3
+```
+
+Direct form: `.venv\Scripts\python run_agents.py agent1`
+
 | Endpoint | Description |
 |---|---|
 | `GET /` | Health check |
 | `GET /config` | Public model/retrieval config (no secrets) |
+| `GET /assistant` | Pop-up patient guidance UI backed by `/chat` |
 | `GET /demo` | Pop-up patient search UI backed by `/chat` |
 | `POST /chat` | Route a question to an agent (`patient_id`, `external_llm_consent` optional) |
 | `POST /reports/analyze` | Multipart medical PDF/image analysis |

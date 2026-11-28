@@ -60,6 +60,14 @@ def test_demo_page_is_served():
     assert "Find a patient record" in response.text
 
 
+def test_assistant_page_is_served():
+    response = client.get("/assistant")
+
+    assert response.status_code == 200
+    assert "text/html" in response.headers["content-type"]
+    assert "Ask a question" in response.text
+
+
 def test_chat_endpoint_rejects_empty_message():
     response = client.post("/chat", json={"message": ""})
     assert response.status_code == 422

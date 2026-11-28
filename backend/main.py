@@ -44,6 +44,11 @@ async def demo_page():
     return FileResponse(PROJECT_ROOT / "backend" / "ui" / "demo.html", media_type="text/html")
 
 
+@app.get("/assistant", include_in_schema=False)
+async def assistant_page():
+    return FileResponse(PROJECT_ROOT / "backend" / "ui" / "assistant.html", media_type="text/html")
+
+
 @app.get("/config")
 async def public_config():
     return {

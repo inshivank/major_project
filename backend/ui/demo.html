@@ -257,6 +257,7 @@
         form.requestSubmit();
       });
     });
+    if (new URLSearchParams(window.location.search).get("open") === "1") openModal();
 
     function bubble(kind, text) {
       const node = document.createElement("div");
